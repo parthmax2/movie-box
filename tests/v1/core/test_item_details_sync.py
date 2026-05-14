@@ -1,0 +1,140 @@
+import pytest
+from pydantic import BaseModel
+
+from movie_box.v1.constants import SubjectType
+from movie_box.v1.core import MovieDetails, Search, TVSeriesDetails
+from movie_box.v1.extractor import (
+    JsonDetailsExtractor,
+    JsonDetailsExtractorModel,
+    TagDetailsExtractor,
+    TagDetailsExtractorModel,
+)
+from movie_box.v1.models import SearchResultsModel
+from movie_box.v1.requests import Session
+from tests.v1 import (
+    MOVIE_KEYWORD,
+    TEST_MOVIE_PAGE_URL,
+    TEST_TV_SERIES_PAGE_URL,
+    TV_SERIES_KEYWORD,
+)
+
+
+@pytest.mark.parametrize(
+    argnames=["url"],
+    argvalues=(
+        [TEST_MOVIE_PAGE_URL],
+        [
+            TEST_TV_SERIES_PAGE_URL,
+        ],
+    ),
+)
+def test_movie_using_page_url(url):
+    session = Session()
+    details = MovieDetails(
+        url,
+        session=session,
+    )
+    assert type(details.get_html_content_sync()) is str
+    assert type(details.get_content_sync()) is dict
+    assert isinstance(details.get_content_model_sync(), BaseModel)
+
+    assert isinstance(
+        details.get_json_details_extractor_sync(), JsonDetailsExtractor
+    )
+    assert isinstance(
+        details.get_tag_details_extractor_sync(), TagDetailsExtractor
+    )
+
+    assert isinstance(
+        details.get_json_details_extractor_model_sync(), JsonDetailsExtractorModel
+    )
+    assert isinstance(
+        details.get_tag_details_extractor_model_sync(), TagDetailsExtractorModel
+    )
+
+
+@pytest.mark.parametrize(
+    argnames=["url"],
+    argvalues=([TEST_TV_SERIES_PAGE_URL],),
+)
+def test_tv_series_using_page_url(url):
+    session = Session()
+    details = TVSeriesDetails(
+        url,
+        session=session,
+    )
+    assert type(details.get_html_content_sync()) is str
+    assert type(details.get_content_sync()) is dict
+    assert isinstance(details.get_content_model_sync(), BaseModel)
+
+    assert isinstance(
+        details.get_json_details_extractor_sync(), JsonDetailsExtractor
+    )
+    assert isinstance(
+        details.get_tag_details_extractor_sync(), TagDetailsExtractor
+    )
+
+    assert isinstance(
+        details.get_json_details_extractor_model_sync(), JsonDetailsExtractorModel
+    )
+    assert isinstance(
+        details.get_tag_details_extractor_model_sync(), TagDetailsExtractorModel
+    )
+
+
+def test_movie_using_search_results_item():
+    session = Session()
+    search = Search(session, query=MOVIE_KEYWORD, subject_type=SubjectType.MOVIES)
+    search_results: SearchResultsModel = search.get_content_model_sync()
+    details = MovieDetails(
+        search_results.first_item,
+        session=session,
+    )
+    assert type(details.get_html_content_sync()) is str
+    assert type(details.get_content_sync()) is dict
+    assert isinstance(details.get_content_model_sync(), BaseModel)
+
+    assert isinstance(
+        details.get_json_details_extractor_sync(), JsonDetailsExtractor
+    )
+    assert isinstance(
+        details.get_tag_details_extractor_sync(), TagDetailsExtractor
+    )
+
+    assert isinstance(
+        details.get_json_details_extractor_model_sync(), JsonDetailsExtractorModel
+    )
+    assert isinstance(
+        details.get_tag_details_extractor_model_sync(), TagDetailsExtractorModel
+    )
+
+
+def test_tv_series_using_search_results_item():
+    session = Session()
+    search = Search(
+        session,
+        query=TV_SERIES_KEYWORD,
+        subject_type=SubjectType.TV_SERIES,
+    )
+    search_results: SearchResultsModel = search.get_content_model_sync()
+    details = TVSeriesDetails(
+        search_results.first_item,
+        session=session,
+    )
+    assert type(details.get_html_content_sync()) is str
+    assert type(details.get_content_sync()) is dict
+    assert isinstance(details.get_content_model_sync(), BaseModel)
+
+    assert isinstance(
+        details.get_json_details_extractor_sync(), JsonDetailsExtractor
+    )
+    assert isinstance(
+        details.get_tag_details_extractor_sync(), TagDetailsExtractor
+    )
+
+    assert isinstance(
+        details.get_json_details_extractor_model_sync(), JsonDetailsExtractorModel
+    )
+    assert isinstance(
+        details.get_tag_details_extractor_model_sync(), TagDetailsExtractorModel
+    )

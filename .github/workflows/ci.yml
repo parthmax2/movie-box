@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install package
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[cli]" pytest pytest-asyncio coverage
+
+      - name: Compile
+        run: python -m compileall -q src tests
+
+      - name: Smoke tests
+        run: |
+          python -m movie_box --version
+          movie-box doctor
+          python -m pytest -q -p no:cacheprovider \
+            tests/v1/cli/test_commands.py::test_version \
+            tests/v2/cli/test_commands.py::test_version \
+            tests/v3/cli/test_commands.py::test_version

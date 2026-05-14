@@ -1,0 +1,242 @@
+"""
+Main module for v2 submodule.
+Generate models from httpx request responses.
+Also provides object mapping support to specific extracted item details
+"""
+
+from typing_extensions import deprecated
+
+import movie_box.v1.core
+from movie_box.v1.helpers import assert_instance
+from movie_box.v2._bases import BaseItemDetails
+from movie_box.v2.constants import SINGLE_ITEM_SUBJECT_TYPES, SubjectType
+from movie_box.v2.exceptions import (
+    ExhaustedSearchResultsError,
+    MovieboxApiException,
+)
+from movie_box.v2.helpers import get_absolute_url
+from movie_box.v2.models import (
+    HomepageContentModel,
+    SearchResultsItem,
+    SearchResultsModel,
+    SpecificItemDetailsModel,
+)
+from movie_box.v2.requests import Session
+
+
+class Homepage(movie_box.v1.core.Homepage):
+    _url = get_absolute_url("/wefeed-h5api-bff/home?host=moviebox.ph")
+
+    async def get_content_model(self) -> HomepageContentModel:
+        """Modelled version of the contents"""
+        content = await self.get_content()
+        return HomepageContentModel(**content)
+
+
+class SearchSuggestion(movie_box.v1.core.SearchSuggestion):
+    _url = get_absolute_url("/wefeed-h5api-bff/subject/search-suggest")
+
+
+class Search(movie_box.v1.core.Search):
+    _url = get_absolute_url("/wefeed-h5api-bff/subject/search")
+
+    async def get_content_model(self) -> SearchResultsModel:
+        """Modelled version of the contents.
+
+        Returns:
+            SearchResultsModel: Modelled contents
+        """
+        contents = await self.get_content()
+        return SearchResultsModel(**contents)
+
+    @deprecated("This method is only available in v1")
+    def get_item_details(self, item: SearchResultsItem) -> None:
+        raise NotImplementedError("Method is only available in v1")
+
+    def next_page(self, content: SearchResultsModel) -> "Search":
+        """Navigate to the search results of the next page.
+
+        Args:
+            content (SearchResultsModel): Modelled version of search results
+
+        Returns:
+            Search
+        """
+        assert_instance(content, SearchResultsModel, "content")
+
+        if content.pager.hasMore:
+            return Search(
+                session=self.session,
+                query=self._query,
+                subject_type=self._subject_type,
+                page=content.pager.nextPage,
+                per_page=self._per_page,
+            )
+        else:
+            raise ExhaustedSearchResultsError(
+                content.pager,
+                "You have already reached the last page of the search results.",
+            )
+
+    def previous_page(self, content: SearchResultsModel) -> "Search":
+        """Navigate to the search results of the previous page.
+
+        - Useful when the currrent page is greater than  1.
+
+        Args:
+            content (SearchResultsModel): Modelled version of search results
+
+        Returns:
+            Search
+        """
+        assert_instance(content, SearchResultsModel, "content")
+
+        if content.pager.page >= 2:
+            return Search(
+                session=self.session,
+                query=self._query,
+                subject_type=self._subject_type,
+                page=content.pager.page - 1,
+                per_page=self._per_page,
+            )
+        else:
+            raise MovieboxApiException(
+                "Unable to navigate to previous page. "
+                "Current page is the first one try navigating to the next "
+                "one instead."
+            )
+
+
+class ItemDetails(BaseItemDetails):
+    """Fetch specific item details - movies, anime, education,
+    music & tv-series"""
+
+    def __init__(self, session: Session):
+        """Constructor for `SingleItemDetails`
+
+        Args:
+            session (Session): MovieboxAPI request session
+        """
+        super().__init__(session)
+
+    async def get_content(self, path_or_item: str | SearchResultsItem) -> dict:
+        """Get specific item details
+
+        Args:
+            path_or_item (str|SearchResultsItem): Detail path for specific item
+              page or search-results-item.
+
+        Raises:
+            ValueError: InvalidDetailPathError
+        """
+
+        assert_instance(path_or_item, (str, SearchResultsItem), "path_or_item")
+
+        detail_path = path_or_item
+
+        if isinstance(path_or_item, SearchResultsItem):
+            detail_path = path_or_item.detailPath
+
+        return await super().get_content(detail_path)
+
+    async def get_content_model(
+        self, path_or_item: str | SearchResultsItem, **kwargs
+    ) -> SpecificItemDetailsModel:
+
+        content = await self.get_content(path_or_item, **kwargs)
+        return SpecificItemDetailsModel(**content)
+
+
+class SingleItemDetails(BaseItemDetails):
+    """Fetch specific item details - movies, anime, education, music"""
+
+    def __init__(self, session: Session):
+        """Constructor for `SingleItemDetails`
+
+        Args:
+            session (Session): MovieboxAPI request session
+        """
+        super().__init__(session)
+
+    async def get_content(self, path_or_item: str | SearchResultsItem) -> dict:
+        """Get specific item details
+
+        Args:
+            path_or_item (str|SearchResultsItem): Detail path for specific item
+              page or search-results-item.
+
+        Raises:
+            ValueError: InvalidDetailPathError
+        """
+
+        assert_instance(path_or_item, (str, SearchResultsItem), "path_or_item")
+
+        detail_path = path_or_item
+
+        if isinstance(path_or_item, SearchResultsItem):
+            if path_or_item.subjectType == SubjectType.TV_SERIES:
+                raise ValueError(
+                    "item needs to be any of the following subjectTypes"
+                    f"{SINGLE_ITEM_SUBJECT_TYPES!r} "
+                    f"not {path_or_item.subjectType!r}"
+                )
+
+            detail_path = path_or_item.detailPath
+
+        return await super().get_content(detail_path)
+
+    async def get_content_model(
+        self, path_or_item: str | SearchResultsItem, **kwargs
+    ) -> SpecificItemDetailsModel:
+
+        content = await self.get_content(path_or_item, **kwargs)
+        return SpecificItemDetailsModel(**content)
+
+
+MusicDetails = AnimeDetails = EducationDetails = MovieDetails = SingleItemDetails
+
+
+class TVSeriesDetails(BaseItemDetails):
+    """Fetch specific item details - tv_series"""
+
+    def __init__(self, session: Session):
+        """Constructor for `TVSeriesItemDetails`
+
+        Args:
+            session (Session): MovieboxAPI request session
+        """
+        super().__init__(session)
+
+    async def get_content(self, path_or_item: str | SearchResultsItem) -> dict:
+        """Get specific item details
+
+        Args:
+            path_or_item (str|SearchResultsItem): Detail path for specific item
+              page or search-results-item.
+
+        Raises:
+            ValueError: InvalidDetailPathError
+        """
+
+        assert_instance(path_or_item, (str, SearchResultsItem), "path_or_item")
+
+        detail_path = path_or_item
+
+        if isinstance(path_or_item, SearchResultsItem):
+            if path_or_item.subjectType != SubjectType.TV_SERIES:
+                raise ValueError(
+                    f"item needs to be of subjectType"
+                    f"{SubjectType.TV_SERIES!r} only"
+                    f"not {path_or_item.subjectType!r}"
+                )
+
+            detail_path = path_or_item.detailPath
+
+        return await super().get_content(detail_path)
+
+    async def get_content_model(
+        self, path_or_item: str | SearchResultsItem, **kwargs
+    ) -> SpecificItemDetailsModel:
+
+        content = await self.get_content(path_or_item, **kwargs)
+        return SpecificItemDetailsModel(**content)

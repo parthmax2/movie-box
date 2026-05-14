@@ -1,0 +1,2 @@
+???+ tip "Coming Soon"
+    The contents of this file are yet to be updated. Kindly check again later. In the meantime, you can go through [tests/v2](https://github.com/parthmax2/movie-box/tree/main/tests/v2) to better understand what will be coming.

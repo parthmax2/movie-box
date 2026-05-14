@@ -1,0 +1,109 @@
+[project]
+name = "movie-box"
+version = "0.5.3"
+description = "movie-box by parthmax: an educational Python CLI movie downloader and API client with subtitle support"
+readme = "README.md"
+license="Unlicense"
+keywords = [
+    "movie-box",
+    "moviebox",
+    "movie downloader",
+    "cli movie downloader",
+    "best movie downloader",
+    "parthmax",
+    "parthmax2",
+    "saksham pathak",
+    "cli",
+    "downloader",
+    "media-downloader",
+    "subtitle-downloader",
+    "python-cli",
+    "httpx",
+    "pydantic",
+    "asyncio",
+]
+authors = [
+    { name = "smartwa", email = "smartwacaleb@gmail.com" }
+]
+requires-python = ">=3.10"
+classifiers = [
+    "License :: OSI Approved :: The Unlicense (Unlicense)",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Communications :: File Sharing",
+    "Topic :: Internet",
+    "Topic :: Multimedia :: Video",
+    "Topic :: Utilities",
+]
+dependencies = [
+    "bs4>=0.0.2",
+    "httpx[socks]>=0.28.1",
+    "pydantic>=2.11.7",
+    "throttlebuster>=0.1.12",
+]
+
+[project.scripts]
+movie-box = "movie_box.console:cli_entry"
+moviebox = "movie_box.console:cli_entry"
+moviebox-v1 = "movie_box.v1.cli.interface:main"
+moviebox-v2 = "movie_box.v2.cli.interface:main"
+moviebox-v3 = "movie_box.v3.cli.interface:main"
+
+[project.urls]
+homepage = "https://github.com/parthmax2/movie-box"
+repository = "https://github.com/parthmax2/movie-box"
+documentation = "https://github.com/parthmax2/movie-box"
+issues = "https://github.com/parthmax2/movie-box/issues"
+source = "https://github.com/parthmax2/movie-box"
+
+[project.optional-dependencies]
+cli = [
+    "click>=8.2.1",
+    "prompt-toolkit>=3.0.43",
+    "pyfiglet>=1.0.2",
+    "rich>=13.7.1",
+    "textual>=0.89.1",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/movie_box"]
+
+[dependency-groups]
+dev = [
+    "coverage>=7.10.4",
+    "coverage-badge>=1.1.2",
+    "mkdocs-material>=9.7.6",
+    "pytest>=8.4.1",
+    "pytest-asyncio>=1.0.0",
+    "ruff>=0.12.8",
+]
+
+[tool.ruff]
+line-length = 82
+
+[tool.ruff.lint]
+select = [
+    "E",      # https://docs.astral.sh/ruff/rules/#error-e
+    "F",      # https://docs.astral.sh/ruff/rules/#pyflakes-f
+    "I",      # https://docs.astral.sh/ruff/rules/#isort-i
+    "FA",     # https://docs.astral.sh/ruff/rules/#flake8-future-annotations-fa
+    "UP",     # https://docs.astral.sh/ruff/rules/#pyupgrade-up
+    "RUF100", # https://docs.astral.sh/ruff/rules/#ruff-specific-rules-ruf
+]
+ignore = [
+    "UP031",  # https://docs.astral.sh/ruff/rules/printf-string-formatting/
+    "F401"    # https://docs.astral.sh/ruff/rules/unused-import
+]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true

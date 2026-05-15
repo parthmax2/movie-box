@@ -3,7 +3,7 @@ name = "movie-box-dl"
 version = "1.0.1"
 description = "movie-box by parthmax: an educational Python CLI movie downloader and API client with subtitle support"
 readme = "README.md"
-license="Unlicense"
+license = { text = "Unlicense" }
 keywords = [
     "movie-box",
     "moviebox",

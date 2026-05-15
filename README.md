@@ -5,11 +5,11 @@
 **movie-box by parthmax: CLI movie downloader and Python API**  
 Search, inspect, download, stream, and manage subtitles from one Python tool.
 
-[![PyPI version](https://badge.fury.io/py/movie-box.svg)](https://pypi.org/project/movie-box)
-[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/movie-box)](https://pypi.org/project/movie-box)
+[![PyPI version](https://badge.fury.io/py/movie-box-dl.svg)](https://pypi.org/project/movie-box-dl)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/movie-box-dl)](https://pypi.org/project/movie-box-dl)
 ![Coverage](https://raw.githubusercontent.com/parthmax2/movie-box/refs/heads/main/assets/coverage.svg)
-[![PyPI - License](https://img.shields.io/pypi/l/movie-box)](https://pypi.org/project/movie-box)
-[![Downloads](https://pepy.tech/badge/movie-box)](https://pepy.tech/project/movie-box)
+[![PyPI - License](https://img.shields.io/pypi/l/movie-box-dl)](https://pypi.org/project/movie-box-dl)
+[![Downloads](https://pepy.tech/badge/movie-box-dl)](https://pepy.tech/project/movie-box-dl)
 [![CI](https://github.com/parthmax2/movie-box/actions/workflows/ci.yml/badge.svg)](https://github.com/parthmax2/movie-box/actions/workflows/ci.yml)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [Install](#installation) | [Quick Start](#quick-start) | [CLI](#usage) | [Python API](#python-api) | [Disclaimer](#disclaimer) | [Docs](https://moviebox.parthmax.in)

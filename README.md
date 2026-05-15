@@ -16,6 +16,7 @@ Search, inspect, download, stream, and manage subtitles from one Python tool.
 
 ![movie-box CLI](assets/cli.png)
 
+
 </div>
 
 

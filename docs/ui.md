@@ -131,7 +131,7 @@ location with environment variables:
 The interactive shell requires the `[cli]` extra:
 
 ```sh
-pip install "movie-box[cli]"
+pip install "movie-box-dl[cli]"
 ```
 
 This installs `Rich`, `PromptToolkit`, `pyfiglet`, and `Textual` alongside the

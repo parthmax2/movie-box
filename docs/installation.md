@@ -1,4 +1,6 @@
-## Installing from Pypi
+## Installing from PyPI
+
+The PyPI package name is **`movie-box-dl`**. The CLI commands after install are `movie-box` and `moviebox`.
 
 We shall be using [uv tool](https://docs.astral.sh/uv/)
 
@@ -7,26 +9,26 @@ We shall be using [uv tool](https://docs.astral.sh/uv/)
 === "Install"
 
     ```sh
-    uv pip install movie-box
+    uv pip install movie-box-dl
     ```
 
 === "Add to project"
 
     ```sh
-    uv add movie-box
+    uv add movie-box-dl
     ```
 ### With [commandline](./v1/cli.md) extra dependencies
 
 === "Install"
 
     ```sh
-    uv pip install "movie-box[cli]"
+    uv pip install "movie-box-dl[cli]"
     ```
 
 === "Add to project"
 
     ```sh
-    uv add "movie-box[cli]"
+    uv add "movie-box-dl[cli]"
     ```
 
 !!! important "CLI utils"
@@ -39,13 +41,13 @@ If you like new features before official releases:
 === "Install"
 
     ```sh
-    uv pip install git+https://github.com/parthmax2/movie-box.git[cli]
+    uv pip install "git+https://github.com/parthmax2/movie-box.git[cli]"
     ```
 
 === "Add to project"
 
     ```sh
-    uv add git+https://github.com/parthmax2/movie-box.git[cli]
+    uv add "git+https://github.com/parthmax2/movie-box.git[cli]"
     ```
 
 ???+ warning "Git required"
@@ -55,7 +57,7 @@ If you like new features before official releases:
 ## Termux Installation (Android)
 
 ```sh
-pip install movie-box --no-deps
+pip install movie-box-dl --no-deps
 pip install 'pydantic==2.9.2'
 pip install rich click bs4 httpx throttlebuster
 ```

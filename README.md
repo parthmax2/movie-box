@@ -31,7 +31,7 @@ Created and maintained by **Saksham Pathak**, also known as **parthmax** , this 
 movie downloader CLI and API client.
 
 ```sh
-pip install "movie-box[cli]"
+pip install "movie-box-dl[cli]"
 movie-box doctor
 movie-box                        # launches the interactive UI
 movie-box search "Avatar" --select
@@ -56,19 +56,19 @@ moviebox v3 download-movie "Avatar" --yes
 ### CLI (for end users)
 
 ```sh
-pip install 'movie-box[cli]'
+pip install "movie-box-dl[cli]"
 ```
 
 ### Base package (for developers)
 
 ```sh
-pip install movie-box
+pip install movie-box-dl
 ```
 
 ### Termux (Android)
 
 ```sh
-pip install movie-box --no-deps
+pip install movie-box-dl --no-deps
 pip install 'pydantic==2.9.2'
 pip install rich click bs4 httpx throttlebuster
 ```

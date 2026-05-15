@@ -12,7 +12,7 @@ Search, inspect, download, stream, and manage subtitles from one Python tool.
 [![Downloads](https://pepy.tech/badge/movie-box)](https://pepy.tech/project/movie-box)
 [![CI](https://github.com/parthmax2/movie-box/actions/workflows/ci.yml/badge.svg)](https://github.com/parthmax2/movie-box/actions/workflows/ci.yml)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
-[Install](#installation) | [Quick Start](#quick-start) | [CLI](#usage) | [Python API](#python-api) | [Disclaimer](#disclaimer) | [Docs](https://movie-box-docs.netlify.app/)
+[Install](#installation) | [Quick Start](#quick-start) | [CLI](#usage) | [Python API](#python-api) | [Disclaimer](#disclaimer) | [Docs](https://moviebox.parthmax.in)
 
 </div>
 
@@ -30,7 +30,7 @@ movie downloader CLI and API client.
 ```sh
 pip install "movie-box[cli]"
 movie-box doctor
-movie-box ui
+movie-box                        # launches the interactive UI
 movie-box search "Avatar" --select
 moviebox v3 download-movie "Avatar" --yes
 ```
@@ -111,6 +111,16 @@ Download from [mpv.io/installation](https://mpv.io/installation/).
 # Check setup
 movie-box doctor
 
+# Launch the interactive cyberpunk shell (both commands are identical)
+movie-box
+moviebox
+
+# Launch without the startup animation
+movie-box ui --no-animation
+
+# Open the full-screen Textual dashboard
+movie-box app
+
 # Search with a colorful table and optional selection prompt
 movie-box search "Avatar" --select
 
@@ -149,9 +159,9 @@ you are legally allowed to access, stream, inspect, or download. The project doe
 not host media files, does not bypass access controls, and is not affiliated with
 or endorsed by MovieBox or any related provider. See [DISCLAIMER.md](DISCLAIMER.md).
 
-## [Usage](https://movie-box-docs.netlify.app/)
+## [Usage](https://moviebox.parthmax.in)
 
-This is just a brief usage information. For more details visit official docs - [https://movie-box-docs.netlify.app/](https://movie-box-docs.netlify.app/)
+This is just a brief usage information. For more details visit official docs - [https://moviebox.parthmax.in](https://moviebox.parthmax.in)
 
 <details open>
 <summary><h3>Command Line Interface</h3></summary>
@@ -162,11 +172,12 @@ moviebox v2 --help
 
 | Command | Description |
 |-|-|
+| `movie-box` / `moviebox` | Launch the interactive cyberpunk shell (no subcommand needed) |
 | `movie-box search` | Search with colored results and optional numbered selection |
 | `movie-box movie` | Search, select, download, or stream a movie |
 | `movie-box series` | Search, select, download, or stream TV series episodes |
 | `movie-box config` | Save defaults such as quality, language, and download directory |
-| `movie-box ui` | Open the animated cyberpunk interactive shell |
+| `movie-box ui` | Open the animated cyberpunk interactive shell (alias for the above) |
 | `movie-box app` | Open the full-screen Textual dashboard |
 | `movie-box doctor` | Check Python, dependencies, package imports, and media players |
 | `download-movie` | Search, download, or stream movies, anime, music, and educational content |
@@ -181,10 +192,14 @@ The top-level commands use v3 internally and add a cleaner search table,
 numbered selection, previews, a cyberpunk startup surface, and saved defaults:
 
 ```sh
-# Open the premium interactive shell
+# Open the interactive shell — typing movie-box or moviebox alone is enough
+movie-box
+moviebox
+
+# You can also use the explicit subcommand; it is identical
 movie-box ui
 
-# Open instantly without animation
+# Open instantly without the startup animation
 movie-box ui --no-animation
 
 # Open the full-screen Textual app

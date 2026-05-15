@@ -8,7 +8,7 @@ from importlib.util import find_spec
 import click
 
 from movie_box import __version__
-from movie_box.friendly_cli import FRIENDLY_COMMANDS, render_banner
+from movie_box.friendly_cli import FRIENDLY_COMMANDS, render_banner, ui_command
 from movie_box.utils import build_command_group
 from movie_box.v1.cli.helpers import show_any_help
 from movie_box.v1.cli.interface import get_commands_map
@@ -23,13 +23,16 @@ class BrandedGroup(click.Group):
         super().format_help(ctx, formatter)
 
 
-@click.group(cls=BrandedGroup)
+@click.group(cls=BrandedGroup, invoke_without_command=True)
 @click.version_option(package_name="movie-box")
-def _cli_entry():
+@click.pass_context
+def _cli_entry(ctx: click.Context):
     """Search and download movies/tv-series and their subtitles
     (environment variable prefix : MOVIEBOX_{V1/V2/V3})
 
     Developed by parthmax."""
+    if ctx.invoked_subcommand is None:
+        ctx.invoke(ui_command)
 
 
 @_cli_entry.group()

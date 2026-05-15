@@ -9,6 +9,7 @@ nav:
 
   - Guide:
       - Installation: installation.md
+      - Interactive Shell UI: ui.md
       - V1:
         - Introduction: v1/introduction.md
         - Movies: v1/movies.md

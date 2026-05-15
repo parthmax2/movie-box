@@ -217,6 +217,7 @@ test.py
 *.srt
 commit-msg*
 *.html
+!docs-site/*.html
 *.part
 temp/
 research*.json

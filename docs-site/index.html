@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>movie-box — Python CLI Movie Downloader & API by parthmax</title>
+<meta name="description" content="movie-box by parthmax: open-source Python CLI to search, download, and stream movies and TV series with subtitle support, async API, and an interactive cyberpunk shell. pip install movie-box-dl-dl[cli]">
+<meta name="keywords" content="movie-box, moviebox, python movie downloader, cli movie downloader, python downloader, subtitle downloader, movie cli, async movie api, parthmax, pydantic, httpx, textual, rich cli">
+<meta name="author" content="Saksham Pathak (parthmax2)">
+<meta property="og:title" content="movie-box — Python CLI Movie Downloader & API">
+<meta property="og:description" content="Search, download, stream movies and TV series from the terminal. Interactive cyberpunk shell, async Python API, subtitle support.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://moviebox.parthmax.in">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="movie-box by parthmax">
+<meta name="twitter:description" content="Python CLI movie downloader with interactive shell, async API, and subtitle support.">
+<link rel="canonical" href="https://moviebox.parthmax.in">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+<style>
+  :root {
+    --bg: #09090b;
+    --bg2: #111113;
+    --bg3: #18181b;
+    --border: #27272a;
+    --neon: #d946ef;
+    --neon2: #a855f7;
+    --cyan: #22d3ee;
+    --text: #f4f4f5;
+    --muted: #71717a;
+    --green: #4ade80;
+    --yellow: #facc15;
+    --red: #f87171;
+    --sidebar-w: 260px;
+    --header-h: 56px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; font-size: 15px; line-height: 1.7; }
+
+  /* ── Header ── */
+  header {
+    position: fixed; top: 0; left: 0; right: 0; height: var(--header-h);
+    background: rgba(9,9,11,0.92); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 24px; z-index: 100;
+  }
+  .logo { font-size: 1.1rem; font-weight: 700; color: var(--neon); letter-spacing: 1px; text-decoration: none; }
+  .logo span { color: var(--text); }
+  .header-links { display: flex; gap: 20px; }
+  .header-links a { color: var(--muted); text-decoration: none; font-size: 0.85rem; transition: color 0.2s; }
+  .header-links a:hover { color: var(--cyan); }
+  .badge-row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .badge-row img { height: 20px; }
+
+  /* ── Layout ── */
+  .layout { display: flex; margin-top: var(--header-h); min-height: calc(100vh - var(--header-h)); }
+
+  /* ── Sidebar ── */
+  aside {
+    width: var(--sidebar-w); flex-shrink: 0;
+    position: fixed; top: var(--header-h); bottom: 0;
+    overflow-y: auto; overflow-x: hidden;
+    background: var(--bg2); border-right: 1px solid var(--border);
+    padding: 20px 0;
+  }
+  aside::-webkit-scrollbar { width: 4px; }
+  aside::-webkit-scrollbar-track { background: transparent; }
+  aside::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .nav-group { margin-bottom: 8px; }
+  .nav-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); padding: 8px 20px 4px; }
+  .nav-link {
+    display: block; padding: 6px 20px 6px 24px; font-size: 0.875rem;
+    color: var(--muted); text-decoration: none; border-left: 2px solid transparent;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+  }
+  .nav-link:hover { color: var(--text); background: rgba(217,70,239,0.06); }
+  .nav-link.active { color: var(--neon); border-left-color: var(--neon); background: rgba(217,70,239,0.08); }
+
+  /* ── Main content ── */
+  main { margin-left: var(--sidebar-w); flex: 1; max-width: 900px; padding: 48px 40px 80px; }
+
+  /* ── Sections ── */
+  section { margin-bottom: 72px; scroll-margin-top: calc(var(--header-h) + 20px); }
+  h1 { font-size: 2.2rem; font-weight: 800; background: linear-gradient(135deg, var(--neon), var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 12px; }
+  h2 { font-size: 1.5rem; font-weight: 700; color: var(--text); margin: 40px 0 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 1.1rem; font-weight: 600; color: var(--neon2); margin: 28px 0 10px; }
+  h4 { font-size: 0.95rem; font-weight: 600; color: var(--cyan); margin: 20px 0 8px; }
+  p { margin-bottom: 14px; color: #d4d4d8; }
+  a { color: var(--cyan); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* ── Hero ── */
+  .hero-subtitle { font-size: 1.1rem; color: var(--muted); margin-bottom: 24px; }
+  .feature-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; margin: 24px 0; }
+  .feature-card {
+    background: var(--bg3); border: 1px solid var(--border); border-radius: 10px;
+    padding: 16px 18px; transition: border-color 0.2s;
+  }
+  .feature-card:hover { border-color: var(--neon2); }
+  .feature-card .icon { font-size: 1.4rem; margin-bottom: 8px; }
+  .feature-card h4 { margin: 0 0 4px; color: var(--text); font-size: 0.9rem; }
+  .feature-card p { font-size: 0.8rem; color: var(--muted); margin: 0; }
+
+  /* ── Code blocks ── */
+  .code-wrap { position: relative; margin: 14px 0; }
+  pre {
+    background: #0d1117 !important; border: 1px solid var(--border);
+    border-radius: 8px; padding: 16px 20px; overflow-x: auto;
+    font-size: 0.875rem; line-height: 1.6;
+  }
+  pre code { background: transparent !important; padding: 0 !important; }
+  code {
+    background: rgba(217,70,239,0.12); color: var(--neon); padding: 2px 6px;
+    border-radius: 4px; font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 0.875em;
+  }
+  .copy-btn {
+    position: absolute; top: 10px; right: 10px;
+    background: var(--bg3); border: 1px solid var(--border); color: var(--muted);
+    padding: 4px 10px; border-radius: 5px; font-size: 0.75rem; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .copy-btn:hover { border-color: var(--neon); color: var(--neon); }
+  .copy-btn.copied { color: var(--green); border-color: var(--green); }
+
+  /* ── Tables ── */
+  .table-wrap { overflow-x: auto; margin: 16px 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+  thead th { background: var(--bg3); color: var(--neon2); font-weight: 600; padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+  tbody td { padding: 9px 14px; border-bottom: 1px solid rgba(39,39,42,0.5); color: #d4d4d8; vertical-align: top; }
+  tbody tr:hover td { background: rgba(217,70,239,0.04); }
+  tbody td code { font-size: 0.8rem; }
+
+  /* ── Callouts ── */
+  .callout { border-radius: 8px; padding: 14px 18px; margin: 18px 0; border-left: 3px solid; }
+  .callout-info { background: rgba(34,211,238,0.07); border-color: var(--cyan); }
+  .callout-tip { background: rgba(74,222,128,0.07); border-color: var(--green); }
+  .callout-warn { background: rgba(250,204,21,0.07); border-color: var(--yellow); }
+  .callout-label { font-size: 0.75rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+  .callout-info .callout-label { color: var(--cyan); }
+  .callout-tip .callout-label { color: var(--green); }
+  .callout-warn .callout-label { color: var(--yellow); }
+
+  /* ── Tabs ── */
+  .tab-bar { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 20px; flex-wrap: wrap; }
+  .tab-btn {
+    padding: 8px 18px; background: none; border: none; border-bottom: 2px solid transparent;
+    color: var(--muted); cursor: pointer; font-size: 0.875rem; font-weight: 500;
+    transition: color 0.2s, border-color 0.2s; margin-bottom: -1px;
+  }
+  .tab-btn.active { color: var(--neon); border-bottom-color: var(--neon); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ── Shell demo ── */
+  .terminal {
+    background: #050507; border: 1px solid var(--neon2); border-radius: 10px;
+    padding: 20px 24px; font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 0.875rem;
+    margin: 20px 0; line-height: 1.8;
+  }
+  .term-prompt { color: var(--neon); }
+  .term-cmd { color: var(--text); }
+  .term-out { color: var(--muted); }
+  .term-hi { color: var(--cyan); }
+  .term-dim { color: #3f3f46; }
+
+  /* ── Install strip ── */
+  .install-strip {
+    background: linear-gradient(135deg, rgba(217,70,239,0.1), rgba(34,211,238,0.07));
+    border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    flex-wrap: wrap; margin: 24px 0;
+  }
+  .install-strip code { background: transparent; color: var(--text); font-size: 1rem; }
+  .install-btn {
+    background: var(--neon); color: #000; border: none; padding: 9px 22px;
+    border-radius: 7px; font-weight: 700; font-size: 0.875rem; cursor: pointer;
+    transition: opacity 0.2s; white-space: nowrap;
+  }
+  .install-btn:hover { opacity: 0.85; }
+
+  /* ── Command deck ── */
+  .cmd-deck { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin: 16px 0; }
+  .cmd-card {
+    background: var(--bg3); border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px 14px; transition: border-color 0.2s;
+  }
+  .cmd-card:hover { border-color: var(--neon2); }
+  .cmd-card .cmd-name { color: var(--neon); font-family: monospace; font-size: 0.85rem; font-weight: 700; }
+  .cmd-card .cmd-desc { color: var(--muted); font-size: 0.78rem; margin-top: 4px; }
+
+  /* ── Version badge ── */
+  .version-tag { display: inline-block; background: rgba(217,70,239,0.15); color: var(--neon); padding: 2px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; border: 1px solid rgba(217,70,239,0.3); }
+
+  /* ── Footer ── */
+  footer { margin-left: var(--sidebar-w); background: var(--bg2); border-top: 1px solid var(--border); padding: 32px 40px; color: var(--muted); font-size: 0.85rem; }
+  footer a { color: var(--muted); }
+  footer a:hover { color: var(--cyan); }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    aside { display: none; }
+    main, footer { margin-left: 0; padding: 24px 20px 60px; }
+    h1 { font-size: 1.7rem; }
+    .feature-grid { grid-template-columns: 1fr; }
+    .install-strip { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════ HEADER ═══════════════════ -->
+<header>
+  <a class="logo" href="#home">movie<span>-box</span></a>
+  <nav class="header-links">
+    <a href="#interactive-shell">Shell UI</a>
+    <a href="#cli">CLI Ref</a>
+    <a href="#python-api">Python API</a>
+    <a href="#config">Config</a>
+    <a href="https://github.com/parthmax2/movie-box" target="_blank">GitHub</a>
+    <a href="https://pypi.org/project/movie-box" target="_blank">PyPI</a>
+  </nav>
+</header>
+
+<!-- ═══════════════════ LAYOUT ═══════════════════ -->
+<div class="layout">
+
+<!-- ═══════════════════ SIDEBAR ═══════════════════ -->
+<aside id="sidebar">
+  <div class="nav-group">
+    <div class="nav-label">Getting Started</div>
+    <a class="nav-link active" href="#home">Overview</a>
+    <a class="nav-link" href="#install">Installation</a>
+    <a class="nav-link" href="#quick-start">Quick Start</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">Interactive UI</div>
+    <a class="nav-link" href="#interactive-shell">Shell UI</a>
+    <a class="nav-link" href="#shell-commands">Commands</a>
+    <a class="nav-link" href="#textual-app">Textual App</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">CLI Reference</div>
+    <a class="nav-link" href="#cli">Friendly CLI</a>
+    <a class="nav-link" href="#cli-v1">moviebox-v1</a>
+    <a class="nav-link" href="#cli-v2">moviebox-v2</a>
+    <a class="nav-link" href="#cli-v3">moviebox-v3</a>
+    <a class="nav-link" href="#streaming">Streaming</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">Python API</div>
+    <a class="nav-link" href="#python-api">Overview</a>
+    <a class="nav-link" href="#api-v1">v1 API</a>
+    <a class="nav-link" href="#api-search">Search API</a>
+    <a class="nav-link" href="#api-progress">Progress Hooks</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">Configuration</div>
+    <a class="nav-link" href="#config">Saved Defaults</a>
+    <a class="nav-link" href="#env-vars">Env Variables</a>
+    <a class="nav-link" href="#filename-tmpl">Filename Templates</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">More</div>
+    <a class="nav-link" href="#doctor">Doctor / Debug</a>
+    <a class="nav-link" href="#mirrors">Mirror Hosts</a>
+    <a class="nav-link" href="#v-compare">v1 / v2 / v3 Compare</a>
+  </div>
+</aside>
+
+<!-- ═══════════════════ MAIN ═══════════════════ -->
+<main>
+
+<!-- ══ HOME ══ -->
+<section id="home">
+  <h1>movie-box</h1>
+  <p class="hero-subtitle">Python CLI movie downloader &amp; async API — by <a href="https://github.com/parthmax2" target="_blank">parthmax</a> <span class="version-tag">v1.0.1</span></p>
+
+  <div class="badge-row" style="margin-bottom:24px">
+    <img src="https://badge.fury.io/py/movie-box.svg" alt="PyPI version">
+    <img src="https://img.shields.io/pypi/pyversions/movie-box" alt="Python versions">
+    <img src="https://img.shields.io/pypi/l/movie-box" alt="License">
+    <img src="https://pepy.tech/badge/movie-box" alt="Downloads">
+    <img src="https://github.com/parthmax2/movie-box/actions/workflows/ci.yml/badge.svg" alt="CI">
+  </div>
+
+  <div class="install-strip">
+    <code>pip install "movie-box-dl[cli]"</code>
+    <button class="install-btn" onclick="copyText('pip install &quot;movie-box[cli]&quot;', this)">Copy</button>
+  </div>
+
+  <p>
+    <strong>movie-box</strong> is an educational open-source Python tool for searching, downloading, and streaming
+    movies and TV series from the terminal. It ships a cyberpunk interactive shell, an async Python API with Pydantic
+    models, subtitle support, and a multi-version backend (v1 / v2 / v3).
+  </p>
+
+  <div class="feature-grid">
+    <div class="feature-card"><div class="icon">⚡</div><h4>Interactive Shell</h4><p>Type <code>movie-box</code> and get a cyberpunk slash-command shell with autocomplete</p></div>
+    <div class="feature-card"><div class="icon">🎬</div><h4>Movies &amp; TV Series</h4><p>Download or stream any movie or TV episode at up to 1080p</p></div>
+    <div class="feature-card"><div class="icon">📝</div><h4>Subtitle Support</h4><p>Download multi-language subtitles alongside video or separately</p></div>
+    <div class="feature-card"><div class="icon">▶️</div><h4>Direct Streaming</h4><p>Stream via MPV or VLC without saving to disk</p></div>
+    <div class="feature-card"><div class="icon">🚀</div><h4>5× Faster Downloads</h4><p>Parallel chunked downloads with resumable part files</p></div>
+    <div class="feature-card"><div class="icon">🐍</div><h4>Async Python API</h4><p>Clean async API with Pydantic models, sync wrappers available</p></div>
+    <div class="feature-card"><div class="icon">🔧</div><h4>v1 / v2 / v3 Backends</h4><p>Multiple API versions for different providers and content types</p></div>
+    <div class="feature-card"><div class="icon">🖥️</div><h4>Textual Dashboard</h4><p>Full-screen TUI app via <code>movie-box app</code></p></div>
+  </div>
+</section>
+
+<!-- ══ INSTALL ══ -->
+<section id="install">
+  <h2>Installation</h2>
+
+  <h3>CLI (recommended for end users)</h3>
+  <div class="code-wrap">
+    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+    <pre><code class="language-bash">pip install "movie-box-dl[cli]"</code></pre>
+  </div>
+  <p>Installs the base package plus <code>Rich</code>, <code>PromptToolkit</code>, <code>pyfiglet</code>, and <code>Textual</code> for the full terminal experience.</p>
+
+  <h3>Base package (Python API only)</h3>
+  <div class="code-wrap">
+    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+    <pre><code class="language-bash">pip install movie-box-dl</code></pre>
+  </div>
+
+  <h3>With uv (faster)</h3>
+  <div class="code-wrap">
+    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+    <pre><code class="language-bash">uv pip install "movie-box-dl[cli]"
+# or add to project
+uv add "movie-box[cli]"</code></pre>
+  </div>
+
+  <h3>From source (latest unreleased)</h3>
+  <div class="code-wrap">
+    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+    <pre><code class="language-bash">pip install "git+https://github.com/parthmax2/movie-box.git[cli]"</code></pre>
+  </div>
+
+  <h3>Termux / Android</h3>
+  <div class="code-wrap">
+    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+    <pre><code class="language-bash">pip install movie-box-dl --no-deps
+pip install "pydantic==2.9.2"
+pip install rich click bs4 httpx throttlebuster</code></pre>
+  </div>
+
+  <h3>Optional — Media Players for Streaming</h3>
+  <p>Install <a href="https://mpv.io/installation/" target="_blank">MPV</a> or <a href="https://www.videolan.org" target="_blank">VLC</a> to enable direct streaming without downloading.</p>
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab(this,'mpv')">Linux</button>
+    <button class="tab-btn" onclick="switchTab(this,'mpv-mac')">macOS</button>
+    <button class="tab-btn" onclick="switchTab(this,'mpv-win')">Windows</button>
+  </div>
+  <div class="tab-panel active" id="tab-mpv">
+    <div class="code-wrap"><button class="copy-btn" onclick="copyCode(this)">Copy</button>
+    <pre><code class="language-bash">sudo apt install mpv          # Ubuntu/Debian
+sudo dnf install mpv          # Fedora/RHEL
+sudo pacman -S mpv            # Arch</code></pre></div>
+  </div>
+  <div class="tab-panel" id="tab-mpv-mac">
+    <div class="code-wrap"><button class="copy-btn" onclick="copyCode(this)">Copy</button>
+    <pre><code class="language-bash">brew install mpv</code></pre></div>
+  </div>
+  <div class="tab-panel" id="tab-mpv-win">
+    <p>Download the installer from <a href="https://mpv.io/installation/" target="_blank">mpv.io/installation</a> or install via <a href="https://scoop.sh" target="_blank">Scoop</a>:</p>
+    <div class="code-wrap"><button class="copy-btn" onclick="copyCode(this)">Copy</button>
+    <pre><code class="language-bash">scoop install mpv</code></pre></div>
+  </div>
+</section>
+
+<!-- ══ QUICK START ══ -->
+<section id="quick-start">
+  <h2>Quick Start</h2>
+
+  <h3>Check your setup</h3>
+  <div class="code-wrap"><button class="copy-btn" onclick="copyCode(this)">Copy</button>
+  <pre><code class="language-bash">movie-box doctor</code></pre></div>
+
+  <h3>Open the interactive shell</h3>
+  <div class="callout callout-tip"><div class="callout-label">Tip</div>
+    Typing <code>movie-box</code> or <code>moviebox</code> alone (no subcommand) goes straight into the interactive cyberpunk shell. No extra arguments needed.
+  </div>
+  <div class="code-wrap"><button class="copy-btn" onclick="copyCode(this)">Copy</button>
+  <pre><code class="language-bash">movie-box      # or just: moviebox</code></pre></div>
+
+  <h3>One-shot commands</h3>
+  <div class="code-wrap"><button class="copy-btn" onclick="copyCode(this)">Copy</button>
+  <pre><code class="language-bash"># Search and show a colored results table
+movie-box search "Avatar"
+
+# Download a movie (best quality, auto-select first result)
+movie-box movie "Avatar" -Y
+
+# Download a TV series episode
+movie-box series "Game of Thrones" -s 1 -e 1
+
+# Stream without downloading (requires MPV)
+movie-box movie "Avatar" --stream-via mpv
+
+# Stream with a dub language
+movie-box series "Money Heist" --dub "English" --stream-via vlc</code></pre></div>
+
+  <h3>Python one-liner</h3>
+  <div class="code-wrap"><button class="copy-btn" onclick="copyCode(this)">Copy</button>
+  <pre><code class="language-python">import asyncio
+from movie_box.v1 import MovieAuto
+
+async def main():
+    auto = MovieAuto()
+    movie_file, subtitle = await auto.run("Avatar")
+    print(movie_file.saved_to)
+
+asyncio.run(main())</code></pre></div>
+</section>
+
+<!-- ══ INTERACTIVE SHELL ══ -->
+<section id="interactive-shell">
+  <h2>Interactive Shell UI</h2>
+  <p>
+    movie-box ships a cyberpunk interactive shell. It remembers your last search, supports
+    <a href="https://python-prompt-toolkit.readthedocs.io/" target="_blank">PromptToolkit</a> autocomplete,
+    and provides a slash-command interface for searching, browsing, and downloading — all from one prompt.
+  </p>
+
+  <h3>Launch</h3>
+  <div class="code-wrap"><button class="copy-btn" onclick="copyCode(this)">Copy</button>
+  <pre><code class="language-bash">movie-box           # recommended — no subcommand needed
+moviebox            # identical
+movie-box ui        # explicit subcommand (same result)
+movie-box ui --no-animation   # skip the startup splash</code></pre></div>
+
+  <div class="terminal">
+    <div><span class="term-dim">┌──────────────────────────────────────────────┐</span></div>
+    <div><span class="term-dim">│</span>  <span class="term-hi">*  Welcome to MOVIE-BOX CLI</span>  <span class="term-hi">v1.0.1</span>         <span class="term-dim">│</span></div>
+    <div><span class="term-dim">│</span>     <span class="term-prompt">movie-box</span> — by <span class="term-hi">parthmax</span>                  <span class="term-dim">│</span></div>
+    <div><span class="term-dim">└──────────────────────────────────────────────┘</span></div>
+    <br>
+    <div><span class="term-prompt">movie-box</span> <span class="term-hi">&gt;</span> <span class="term-cmd">/search Inception</span></div>
+    <div><span class="term-out">  #  Title                Year   IMDb   Type</span></div>
+    <div><span class="term-out">  1  Inception             2010   8.8    Movie</span></div>
+    <div><span class="term-out">  2  Inception (Parody)    2011   -      Movie</span></div>
+    <br>
+    <div><span class="term-prompt">movie-box</span> <span class="term-hi">&gt;</span> <span class="term-cmd">1</span></div>
+    <div><span class="term-out">  ╭─── Selected ────────────────╮</span></div>
+    <div><span class="term-out">  │ Inception (2010) · IMDb 8.8 │</span></div>
+    <div><span class="term-out">  ╰─────────────────────────────╯</span></div>
+    <br>
+    <div><span class="term-prompt">movie-box</span> <span class="term-hi">&gt;</span> <span class="term-cmd">/download 1</span></div>
+    <div><span class="term-hi">  Downloading Inception (2010).mp4 …</span></div>
+    <br>
+    <div><span class="term-prompt">movie-box</span> <span class="term-hi">&gt;</span> <span class="term-cmd">/exit</span></div>
+    <div><span class="term-out">  session closed</span></div>
+  </div>
+</section>
+
+<!-- ══ SHELL COMMANDS ══ -->
+<section id="shell-commands">
+  <h2>Shell Commands</h2>
+  <p>All commands start with <code>/</code>. Omitting the slash on a bare word auto-triggers a search. Type a result number to preview it.</p>
+
+  <div class="cmd-deck">
+    <div class="cmd-card"><div class="cmd-name">/help</div><div class="cmd-desc">Show the command deck</div></div>
+    <div class="cmd-card"><div class="cmd-name">/search &lt;title&gt;</div><div class="cmd-desc">Search all content types, get a numbered table</div></div>
+    <div class="cmd-card"><div class="cmd-name">/movie &lt;title&gt;</div><div class="cmd-desc">Search movies and preview the top match</div></div>
+    <div class="cmd-card"><div class="cmd-name">/series &lt;title&gt;</div><div class="cmd-desc">Search TV series and preview the top match</div></div>
+    <div class="cmd-card"><div class="cmd-name">/select &lt;n&gt;</div><div class="cmd-desc">Preview result #n from last search</div></div>
+    <div class="cmd-card"><div class="cmd-name">/download &lt;n&gt;</div><div class="cmd-desc">Download movie result #n from last search</div></div>
+    <div class="cmd-card"><div class="cmd-name">/config</div><div class="cmd-desc">Show saved defaults (quality, dir, language)</div></div>
+    <div class="cmd-card"><div class="cmd-name">/doctor</div><div class="cmd-desc">Hint to run full environment check</div></div>
+    <div class="cmd-card"><div class="cmd-name">/clear</div><div class="cmd-desc">Clear terminal and redisplay header</div></div>
+    <div class="cmd-card"><div class="cmd-name">/exit</div><div class="cmd-desc">Close the shell</div></div>
+  </div>
+
+  <h3>Shortcuts</h3>
+  <div class="code-wrap"><button class="copy-btn" onclick="copyCode(this)">Copy</button>
+  <pre><code class="language-bash"># bare word = /search
+Inception
+
+# result number = /select N
+/search Inception
+2               # previews result #2
+
+# /download from last search
+/download 2</code></pre></div>
+
+  <h3>Autocomplete</h3>
+  <p>With <code>movie-box[cli]</code> installed, start typing <code>/</code> and press <kbd>Tab</kbd> to cycle through available commands. The shell uses PromptToolkit with a neon style.</p>
+</section>
+
+<!-- ══ TEXTUAL APP ══ -->
+<section id="textual-app">
+  <h2>Full-Screen Textual App</h2>
+  <p>
+    For a full-screen terminal dashboard (requires <code>movie-box[cli]</code>), use:
+  </p>
+  <div class="code-wrap"><button class="copy-btn" onclick="copyCode(this)">Copy</button>
+  <pre><code class="language-bash">movie-box app</code></pre></div>
+  <p>Press <kbd>q</kbd> or <kbd>Escape</kbd> to quit the Textual app.</p>
+  <div class="callout callout-info"><div class="callout-label">Info</div>
+    The Textual app is a visual launcher. For downloading, use the interactive shell (<code>movie-box</code>) or the one-shot CLI commands.
+  </div>
+</section>
+
+<!-- ══ CLI (Friendly) ══ -->
+<section id="cli">
+  <h2>Friendly CLI Reference</h2>
+  <p>
+    The top-level <code>movie-box</code> / <code>moviebox</code> commands use the v3 backend internally
+    and add a richer search table, numbered selection, previews, saved defaults, and the interactive shell.
+  </p>
+
+  <div class="table-wrap"><table>
+    <thead><tr><th>Command</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>movie-box</code> / <code>moviebox</code></td><td>Launch the interactive shell (no subcommand needed)</td></tr>
+      <tr><td><code>movie-box ui</code></td><td>Same as above — explicit alias</td></tr>
+      <tr><td><code>movie-box ui --no-animation</code></td><td>Skip the startup splash</td></tr>
+      <tr><td><code>movie-box app</code></td><td>Full-screen Textual dashboard</td></tr>
+      <tr><td><code>movie-box search &lt;query&gt;</code></td><td>Colored results table with optional selection</td></tr>
+      <tr><td><code>movie-box movie &lt;title&gt;</code></td><td>Search, select, download, or stream a movie</td></tr>
+      <tr><td><code>movie-box series &lt;title&gt;</code></td><td>Search, select, download, or stream TV series episodes</td></tr>
+      <tr><td><code>movie-box config</code></td><td>Manage saved defaults</td></tr>
+      <tr><td><code>movie-box doctor</code></td><td>Check Python, dependencies, and media players</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>movie-box search</h3>
+  <div class="code-wrap"><button class="copy-btn" onclick="copyCode(this)">Copy</button>
+  <pre><code class="language-bash">movie-box search "Avatar"
+movie-box search "Avatar" --select          # prompt to pick one
+movie-box search "Avatar" -t movie          # filter by type: movie|series|anime|music|education|all
+movie-box search "Avatar" -y 2009           # filter by year
+movie-box search "Avatar" -l 5             # limit to 5 results</code></pre></div>
+
+  <h3>movie-box movie</h3>
+  <div class="code-wrap"><button class="copy-btn" onclick="copyCode(this)">Copy</button>
+  <pre><code class="language-bash">movie-box movie "Inception"
+movie-box movie "Inception" -q 1080P        # quality: best|1080P|720P|480P|360P
+movie-box movie "Inception" -d ~/Movies     # save directory
+movie-box movie "Inception" -x English -x Hindi   # subtitle languages
+movie-box movie "Inception" --dub "Hindi"   # dub language
+movie-box movie "Inception" --caption       # also download subtitles
+movie-box movie "Inception" --caption-only  # subtitles only
+movie-box movie "Inception" --stream-via mpv
+movie-box movie "Inception" --dry-run       # preview without downloading
+movie-box movie "Inception" -Y              # skip confirmation prompt</code></pre></div>
+
+  <h3>movie-box series</h3>
+  <div class="code-wrap"><button class="copy-btn" onclick="copyCode(this)">Copy</button>
+  <pre><code class="language-bash">movie-box series "Merlin" -s 1 -e 1         # season 1 episode 1
+movie-box series "Merlin" -s 1 -e 1 -l 5   # download 5 episodes
+movie-box series "Merlin" -s 1 -e 1 -q 720P
+movie-box series "Merlin" -s 1 -e 1 --stream-via vlc
+movie-box series "Merlin" -s 1 -e 1 -Y     # skip prompt</code></pre></div>
+</section>
+
+<!-- ══ CLI v1 ══ -->
+<section id="cli-v1">
+  <h2>moviebox-v1 CLI</h2>
+  <p>Legacy v1 CLI. Supports movies and TV series. Includes <code>popular-search</code> and <code>mirror-hosts</code> commands not in v2/v3.</p>
+
+  <div class="callout callout-info"><div class="callout-label">Env Prefix</div><code>MOVIEBOX_</code> — e.g. <code>MOVIEBOX_API_HOST=https://h5.aoneroom.com</code></div>
+
+  <h3>Commands</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Command</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>download-movie</code></td><td>Search and download or stream a movie</td></tr>
+      <tr><td><code>download-series</code></td><td>Search and download or stream a TV series</td></tr>
+      <tr><td><code>item-details</code></td><td>Show details for a specific title</td></tr>
+      <tr><td><code>homepage-content</code></td><td>Show Moviebox landing page content</td></tr>
+      <tr><td><code>popular-search</code></td><td>Show currently trending searches</td></tr>
+      <tr><td><code>mirror-hosts</code></td><td>Discover available mirror hosts</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>download-movie examples</h3>
+  <div class="code-wrap"><button class="copy-btn" onclick="copyCode(this)">Copy</button>
+  <pre><code class="language-bash">moviebox-v1 download-movie "Inception"
+moviebox-v1 download-movie "Inception" -q 720p -Y -d ~/Movies
+moviebox-v1 download-movie "The Batman" -y 2022 -q 1080p -I
+moviebox-v1 download-movie "Inception" -X mpv         # stream
+moviebox-v1 download-movie "Inception" -O              # captions only
+moviebox-v1 download-movie "Inception" -T              # test, no download</code></pre></div>
+
+  <h3>download-series examples</h3>
+  <div class="code-wrap"><button class="copy-btn" onclick="copyCode(this)">Copy</button>
+  <pre><code class="language-bash">moviebox-v1 download-series "Merlin" -s 1 -e 1
+moviebox-v1 download-series "Merlin" -s 2 -e 3 -l 5 -q 720p -f group
+moviebox-v1 download-series "The Last Kingdom" -s 1 -e 1 -A   # auto all episodes
+moviebox-v1 download-series "Into the Badlands" -s 1 -e 1 -X vlc
+moviebox-v1 download-series "Merlin" -s 1 -e 1 -l 13 -f struct -Y</code></pre></div>
+
+  <h3>Key Options</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Option</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>-q, --quality</code></td><td>best|1080p|720p|480p|360p|worst</td><td>best</td><td>Video quality</td></tr>
+      <tr><td><code>-y, --year</code></td><td>INTEGER</td><td>0</td><td>Filter by release year</td></tr>
+      <tr><td><code>-d, --dir</code></td><td>DIRECTORY</td><td>$PWD</td><td>Download directory</td></tr>
+      <tr><td><code>-x, --language</code></td><td>TEXT</td><td>English</td><td>Subtitle language</td></tr>
+      <tr><td><code>-X, --stream-via</code></td><td>mpv|vlc</td><td>—</td><td>Stream directly</td></tr>
+      <tr><td><code>-Y, --yes</code></td><td>flag</td><td>—</td><td>Skip confirmation</td></tr>
+      <tr><td><code>-T, --test</code></td><td>flag</td><td>—</td><td>Test without downloading</td></tr>
+      <tr><td><code>-O, --caption-only</code></td><td>flag</td><td>—</td><td>Captions only</td></tr>
+      <tr><td><code>-A, --auto-mode</code></td><td>flag</td><td>—</td><td>Download all remaining episodes</td></tr>
+      <tr><td><code>-s, --season</code></td><td>INTEGER</td><td>required</td><td>Season number (series)</td></tr>
+      <tr><td><code>-e, --episode</code></td><td>INTEGER</td><td>required</td><td>Start episode (series)</td></tr>
+      <tr><td><code>-l, --limit</code></td><td>INTEGER</td><td>1</td><td>Number of episodes (series)</td></tr>
+      <tr><td><code>-f, --format</code></td><td>standard|group|struct</td><td>—</td><td>Folder layout (series)</td></tr>
+      <tr><td><code>-t, --tasks</code></td><td>INTEGER (1–1000)</td><td>5</td><td>Parallel download tasks</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ══ CLI v2 ══ -->
+<section id="cli-v2">
+  <h2>moviebox-v2 CLI</h2>
+  <p>v2 adds support for <strong>anime, music, and educational content</strong> in <code>download-movie</code> via the <code>-s / --subject-type</code> flag.</p>
+
+  <div class="callout callout-info"><div class="callout-label">Env Prefix</div><code>MOVIEBOX_API_HOST_V2=https://mirror.example.com</code></div>
+
+  <h3>Subject types (v2 download-movie)</h3>
+  <p><code>movies</code> · <code>anime</code> · <code>music</code> · <code>education</code></p>
+
+  <h3>Examples</h3>
+  <div class="code-wrap"><button class="copy-btn" onclick="copyCode(this)">Copy</button>
+  <pre><code class="language-bash">moviebox-v2 download-movie "Inception"
+moviebox-v2 download-movie "Demon Slayer" -s anime -q 720p -Y
+moviebox-v2 download-movie "Cosmos" -s education -d ~/Videos/Docs
+moviebox-v2 download-movie "Kendrick Lamar Concert" -s music -X mpv
+moviebox-v2 download-series "Merlin" -s 2 -e 3 -l 5 -q 720p -f group</code></pre></div>
+
+  <div class="callout callout-tip"><div class="callout-label">v2 vs v1</div>
+    v2 is identical to v1 except: <code>download-movie</code> supports extra subject types, and there is no <code>popular-search</code> command.
+  </div>
+</section>
+
+<!-- ══ CLI v3 ══ -->
+<section id="cli-v3">
+  <h2>moviebox-v3 CLI</h2>
+  <p>v3 is the newest backend. It adds <strong>dub language selection</strong>, <code>--limit -1</code> for unlimited episodes, and an <code>unknown</code> subject type.</p>
+
+  <div class="callout callout-info"><div class="callout-label">Env Prefix</div><code>MOVIEBOX_V3_</code> — no API host override required for v3.</div>
+
+  <h3>Key additions over v1/v2</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Feature</th><th>v1</th><th>v2</th><th>v3</th></tr></thead>
+    <tbody>
+      <tr><td>Dub language (<code>-u</code>)</td><td>✗</td><td>✗</td><td>✓</td></tr>
+      <tr><td><code>--limit -1</code> (unlimited)</td><td>✗</td><td>✗</td><td>✓</td></tr>
+      <tr><td>Subject type <code>unknown</code></td><td>✗</td><td>✗</td><td>✓</td></tr>
+      <tr><td>Season/episode defaults</td><td>required</td><td>required</td><td><code>1</code> / <code>1</code></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>download-movie examples</h3>
+  <div class="code-wrap"><button class="copy-btn" onclick="copyCode(this)">Copy</button>
+  <pre><code class="language-bash">moviebox-v3 download-movie "Avatar" -YT                    # test, skip prompt
+moviebox-v3 download-movie "Avatar" -x en -x filipino -YT  # multiple subtitle langs
+moviebox-v3 download-movie "Avatar" --dub hi -YT            # Hindi dub
+moviebox-v3 download-movie "walker" -s music -YT            # music content
+moviebox-v3 download-movie "Demon Slayer" -s anime -q 1080p -Y -d ~/Videos
+moviebox-v3 download-movie "Avengers Endgame" -X mpv        # stream</code></pre></div>
+
+  <h3>download-series examples</h3>
+  <div class="code-wrap"><button class="copy-btn" onclick="copyCode(this)">Copy</button>
+  <pre><code class="language-bash">moviebox-v3 download-series "Merlin" -A                      # all episodes
+moviebox-v3 download-series "Merlin" -s 1 -e 1 -l -1        # same as -A
+moviebox-v3 download-series "Merlin" -s 2 -e 3 -l 5 -q 720p -f group
+moviebox-v3 download-series "Into the Badlands" -s 1 -e 1 -X vlc
+moviebox-v3 download-series "Merlin" -A -f struct -Y -d ~/Series</code></pre></div>
+</section>
+
+<!-- ══ STREAMING ══ -->
+<section id="streaming">
+  <h2>Direct Streaming</h2>
+  <p>Stream content directly into MPV or VLC without writing a file to disk. Requires <code>movie-box[cli]</code> and the player installed.</p>
+
+  <div class="code-wrap"><button class="copy-btn" onclick="copyCode(this)">Copy</button>
+  <pre><code class="language-bash"># Friendly CLI
+movie-box movie "Avatar" --stream-via mpv
+movie-box movie "Avatar" --stream-via vlc
+movie-box series "Game of Thrones" -s 1 -e 1 --stream-via vlc
+
+# v1 / v2 / v3 CLI
+moviebox-v1 download-movie "Inception" -X mpv
+moviebox-v2 download-movie "Avatar" -X vlc
+moviebox-v3 download-series "Merlin" -s 1 -e 1 -X mpv</code></pre></div>
+
+  <div class="callout callout-info"><div class="callout-label">Note</div>
+    Temporary files are cleaned up automatically after the player exits.
+  </div>
+</section>
+
+<!-- ══ PYTHON API ══ -->
+<section id="python-api">
+  <h2>Python API Overview</h2>
+  <p>
+    movie-box exposes a clean async Python API with Pydantic models. All core classes have two methods:
+    <code>.get_content()</code> (raw dict) and <code>.get_content_model()</code> (Pydantic model).
+    Sync wrappers are provided via <code>_sync</code> variants.
+  </p>
+
+  <div class="callout callout-tip"><div class="callout-label">Requirements</div>
+    The base <code>pip install movie-box-dl</code> is sufficient for the Python API — the <code>[cli]</code> extra is only needed for the terminal UI.
+  </div>
+</section>
+
+<!-- ══ API v1 ══ -->
+<section id="api-v1">
+  <h2>v1 API — Auto Download</h2>
+
+  <h3>MovieAuto — simplest usage</h3>
+  <div class="code-wrap"><button class="copy-btn" onclick="copyCode(this)">Copy</button>
+  <pre><code class="language-python">import asyncio
+from movie_box.v1 import MovieAuto
+
+async def main():
+    auto = MovieAuto()
+    movie_file, subtitle_file = await auto.run("Avatar")
+    print(f"Movie:    {movie_file.saved_to}")
+    print(f"Subtitle: {subtitle_file.saved_to}")
+
+asyncio.run(main())</code></pre></div>
+
+  <p>Behind the scenes <code>MovieAuto</code> does: search → prompt to pick a result → download movie + subtitle.</p>
+
+  <h3>Custom configuration</h3>
+  <div class="code-wrap"><button class="copy-btn" onclick="copyCode(this)">Copy</button>
+  <pre><code class="language-python">from movie_box.v1 import MovieAuto
+import asyncio
+
+async def main():
+    auto = MovieAuto(
+        caption_language="Spanish",
+        quality="720p",
+        download_dir="~/Downloads"
+    )
+    movie_file, subtitle = await auto.run("Avatar")
+
+asyncio.run(main())</code></pre></div>
+
+  <h3>TV Series download</h3>
+  <div class="code-wrap"><button class="copy-btn" onclick="copyCode(this)">Copy</button>
+  <pre><code class="language-python">from movie_box.v1.cli import Downloader
+import asyncio
+
+async def main():
+    d = Downloader()
+    episodes = await d.download_tv_series(
+        "Merlin",
+        season=1,
+        episode=1,
+        limit=3,
+    )
+    print(episodes)
+
+asyncio.run(main())</code></pre></div>
+</section>
+
+<!-- ══ API SEARCH ══ -->
+<section id="api-search">
+  <h2>Search API</h2>
+
+  <h3>Search movies</h3>
+  <div class="code-wrap"><button class="copy-btn" onclick="copyCode(this)">Copy</button>
+  <pre><code class="language-python">import asyncio
+from movie_box.v1.core import Session, Search
+
+async def main():
+    async with Session() as session:
+        search = Search(session, query="avatar")
+        results = await search.get_content_model()
+        for item in results.items:
+            print(item.title, item.page_url)
+
+asyncio.run(main())</code></pre></div>
+
+  <h3>Pagination</h3>
+  <div class="code-wrap"><button class="copy-btn" onclick="copyCode(this)">Copy</button>
+  <pre><code class="language-python">async with Session() as session:
+    search = Search(session, query="avatar")
+    page1 = await search.get_content_model()
+
+    if page1.pager.hasMore:
+        search2 = search.next_page(page1)
+        page2 = await search2.get_content_model()</code></pre></div>
+
+  <h3>Movie details</h3>
+  <div class="code-wrap"><button class="copy-btn" onclick="copyCode(this)">Copy</button>
+  <pre><code class="language-python">from movie_box.v1.core import Session, Search, MovieDetails
+
+async with Session() as session:
+    search = Search(session, query="inception")
+    results = await search.get_content_model()
+    target = results.items[0]
+
+    details = MovieDetails(session, target)
+    info = await details.get_content_model()
+    print(info.title, info.imdb_rating)</code></pre></div>
+</section>
+
+<!-- ══ API PROGRESS ══ -->
+<section id="api-progress">
+  <h2>Progress Hooks</h2>
+  <div class="code-wrap"><button class="copy-btn" onclick="copyCode(this)">Copy</button>
+  <pre><code class="language-python">import asyncio
+from movie_box.v1 import DownloadTracker, MovieAuto
+
+async def on_progress(progress: DownloadTracker):
+    pct = (progress.downloaded_size / progress.expected_size) * 100
+    print(f"\r[{pct:5.1f}%] {progress.saved_to.name}", end="", flush=True)
+
+async def main():
+    auto = MovieAuto(tasks=5)   # 5 parallel download tasks
+    await auto.run("Avatar", progress_hook=on_progress)
+    print()
+
+asyncio.run(main())</code></pre></div>
+</section>
+
+<!-- ══ CONFIG ══ -->
+<section id="config">
+  <h2>Saved Defaults</h2>
+  <p>
+    Use <code>movie-box config</code> to persist defaults so you don't have to pass flags every time.
+    Settings are read by all friendly CLI commands and the interactive shell.
+  </p>
+
+  <div class="code-wrap"><button class="copy-btn" onclick="copyCode(this)">Copy</button>
+  <pre><code class="language-bash">movie-box config set quality 720P
+movie-box config set language English Hindi   # multiple values
+movie-box config set dir ~/Movies
+movie-box config set dub "Original Audio"
+movie-box config set caption_dir ~/Subs
+
+movie-box config show    # print current config as JSON
+movie-box config get quality
+movie-box config reset   # delete saved config</code></pre></div>
+
+  <h3>Available keys</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Key</th><th>Description</th><th>Example</th></tr></thead>
+    <tbody>
+      <tr><td><code>quality</code></td><td>Default video quality</td><td><code>720P</code></td></tr>
+      <tr><td><code>language</code></td><td>Default subtitle language(s)</td><td><code>English Hindi</code></td></tr>
+      <tr><td><code>dir</code></td><td>Default download directory</td><td><code>~/Movies</code></td></tr>
+      <tr><td><code>caption_dir</code></td><td>Default subtitle save directory</td><td><code>~/Subs</code></td></tr>
+      <tr><td><code>dub</code></td><td>Default dub language</td><td><code>Original Audio</code></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Config file location</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Platform</th><th>Default Path</th></tr></thead>
+    <tbody>
+      <tr><td>Windows</td><td><code>%APPDATA%\movie-box\config.json</code></td></tr>
+      <tr><td>macOS / Linux</td><td><code>~/.config/movie-box/config.json</code></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ══ ENV VARS ══ -->
+<section id="env-vars">
+  <h2>Environment Variables</h2>
+
+  <div class="table-wrap"><table>
+    <thead><tr><th>Variable</th><th>Used by</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>MOVIEBOX_API_HOST</code></td><td>v1</td><td>Override the v1 API / mirror host</td></tr>
+      <tr><td><code>MOVIEBOX_API_HOST_V2</code></td><td>v2</td><td>Override the v2 API / mirror host</td></tr>
+      <tr><td><code>MOVIEBOX_CONFIG_PATH</code></td><td>friendly CLI</td><td>Full path to the config JSON file</td></tr>
+      <tr><td><code>MOVIEBOX_CONFIG_HOME</code></td><td>friendly CLI</td><td>Directory containing <code>config.json</code></td></tr>
+      <tr><td><code>DEBUG=1</code></td><td>all</td><td>Enable full stack traces on errors</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="code-wrap"><button class="copy-btn" onclick="copyCode(this)">Copy</button>
+  <pre><code class="language-bash"># Override API host (v1)
+export MOVIEBOX_API_HOST=https://h5.aoneroom.com
+
+# Store config in a custom location
+export MOVIEBOX_CONFIG_PATH=~/.dotfiles/moviebox.json
+
+# Enable debug output
+DEBUG=1 movie-box movie "Avatar"</code></pre></div>
+</section>
+
+<!-- ══ FILENAME TEMPLATES ══ -->
+<section id="filename-tmpl">
+  <h2>Filename Templates</h2>
+  <p>Customize output filenames using <code>-M</code> (movie), <code>-L</code> (episode), and <code>-C</code> (caption) flags.</p>
+
+  <h3>Default templates</h3>
+  <div class="code-wrap"><button class="copy-btn" onclick="copyCode(this)">Copy</button>
+  <pre><code class="language-bash">Movie file:      {title} ({release_year}).{ext}
+Movie caption:   {title} ({release_year}).{lan}.{ext}
+Episode file:    {title} S{season}E{episode}.{ext}
+Episode caption: {title} S{season}E{episode}.{lan}.{ext}</code></pre></div>
+
+  <h3>Available placeholders</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Placeholder</th><th>Description</th><th>Scope</th></tr></thead>
+    <tbody>
+      <tr><td><code>{title}</code></td><td>Title of the movie or series</td><td>all</td></tr>
+      <tr><td><code>{release_year}</code></td><td>Release year</td><td>all</td></tr>
+      <tr><td><code>{release_date}</code></td><td>Full release date</td><td>all</td></tr>
+      <tr><td><code>{resolution}</code></td><td>Video resolution e.g. <code>1080p</code></td><td>video</td></tr>
+      <tr><td><code>{ext}</code></td><td>File extension</td><td>all</td></tr>
+      <tr><td><code>{size_string}</code></td><td>Human-readable file size</td><td>all</td></tr>
+      <tr><td><code>{season}</code></td><td>Season number</td><td>series</td></tr>
+      <tr><td><code>{episode}</code></td><td>Episode number</td><td>series</td></tr>
+      <tr><td><code>{episode_title}</code></td><td>Episode title</td><td>series</td></tr>
+      <tr><td><code>{duration}</code></td><td>Media duration</td><td>video</td></tr>
+      <tr><td><code>{codec_name}</code></td><td>Video codec name</td><td>video</td></tr>
+      <tr><td><code>{lan}</code></td><td>Caption language code e.g. <code>en</code></td><td>caption</td></tr>
+      <tr><td><code>{lan_name}</code></td><td>Caption language full name</td><td>caption</td></tr>
+      <tr><td><code>{delay}</code></td><td>Caption sync delay value</td><td>caption</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Custom template examples</h3>
+  <div class="code-wrap"><button class="copy-btn" onclick="copyCode(this)">Copy</button>
+  <pre><code class="language-bash">moviebox-v3 download-movie "Avatar" -M "{title}.{resolution}.{ext}"
+moviebox-v3 download-series "Merlin" -L "{title}.S{season}E{episode}.{resolution}.{ext}"
+moviebox-v3 download-movie "Avatar" -C "{title}.{release_year}.{lan_name}.{ext}"</code></pre></div>
+</section>
+
+<!-- ══ DOCTOR ══ -->
+<section id="doctor">
+  <h2>Environment Check (doctor)</h2>
+  <p>Run <code>movie-box doctor</code> to verify your installation before reporting issues.</p>
+
+  <div class="code-wrap"><button class="copy-btn" onclick="copyCode(this)">Copy</button>
+  <pre><code class="language-bash">movie-box doctor</code></pre></div>
+
+  <p>Checks and prints: movie-box version, Python version, required packages (<code>httpx</code>, <code>pydantic</code>, <code>click</code>, etc.), module availability (<code>v1</code>/<code>v2</code>/<code>v3</code>), and media player paths (MPV, VLC).</p>
+</section>
+
+<!-- ══ MIRRORS ══ -->
+<section id="mirrors">
+  <h2>Mirror Hosts</h2>
+  <p>h5.aoneroom.com has multiple mirror hosts. Use these commands to discover and select one:</p>
+
+  <div class="code-wrap"><button class="copy-btn" onclick="copyCode(this)">Copy</button>
+  <pre><code class="language-bash"># List mirrors
+moviebox-v1 mirror-hosts
+moviebox-v2 mirror-hosts
+
+# Set mirror via environment variable
+export MOVIEBOX_API_HOST=https://h5.aoneroom.com   # v1
+export MOVIEBOX_API_HOST_V2=https://mirror.example.com  # v2</code></pre></div>
+</section>
+
+<!-- ══ VERSION COMPARE ══ -->
+<section id="v-compare">
+  <h2>v1 / v2 / v3 Comparison</h2>
+
+  <div class="table-wrap"><table>
+    <thead><tr><th>Feature</th><th>v1</th><th>v2</th><th>v3</th></tr></thead>
+    <tbody>
+      <tr><td>Subtitle/caption support</td><td>✓</td><td>✓</td><td>✓</td></tr>
+      <tr><td>Dub language (<code>-u</code>)</td><td>✗</td><td>✗</td><td>✓</td></tr>
+      <tr><td>Anime / music / education</td><td>✗</td><td>✓</td><td>✓</td></tr>
+      <tr><td>Subject type <code>unknown</code></td><td>✗</td><td>✗</td><td>✓</td></tr>
+      <tr><td><code>--limit -1</code> (unlimited)</td><td>✗</td><td>✗</td><td>✓</td></tr>
+      <tr><td><code>popular-search</code> command</td><td>✓</td><td>✗</td><td>✗</td></tr>
+      <tr><td><code>mirror-hosts</code> command</td><td>✓</td><td>✓</td><td>✗</td></tr>
+      <tr><td>Season / episode defaults</td><td>required</td><td>required</td><td><code>1</code> / <code>1</code></td></tr>
+      <tr><td>Env prefix</td><td><code>MOVIEBOX_</code></td><td><code>MOVIEBOX_</code></td><td><code>MOVIEBOX_V3_</code></td></tr>
+      <tr><td>API host env var</td><td><code>MOVIEBOX_API_HOST</code></td><td><code>MOVIEBOX_API_HOST_V2</code></td><td>not needed</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+</main>
+</div>
+
+<!-- ═══════════════════ FOOTER ═══════════════════ -->
+<footer>
+  <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:16px;max-width:860px">
+    <div>
+      <strong style="color:var(--text)">movie-box</strong> by <a href="https://github.com/parthmax2" target="_blank">Saksham Pathak (parthmax2)</a><br>
+      Educational Python CLI movie downloader and API client.
+    </div>
+    <div style="display:flex;gap:20px;align-items:start">
+      <a href="https://github.com/parthmax2/movie-box" target="_blank">GitHub</a>
+      <a href="https://pypi.org/project/movie-box" target="_blank">PyPI</a>
+      <a href="https://github.com/parthmax2/movie-box/issues" target="_blank">Issues</a>
+      <a href="https://github.com/parthmax2/movie-box/blob/main/DISCLAIMER.md" target="_blank">Disclaimer</a>
+    </div>
+  </div>
+  <p style="margin-top:16px;font-size:0.8rem">
+    For educational use only. movie-box does not host media files and is not affiliated with MovieBox or any provider.
+  </p>
+</footer>
+
+<!-- ═══════════════════ SCRIPTS ═══════════════════ -->
+<script>
+  // Highlight.js
+  document.addEventListener('DOMContentLoaded', () => {
+    hljs.highlightAll();
+  });
+
+  // Copy code from pre block
+  function copyCode(btn) {
+    const pre = btn.nextElementSibling;
+    const text = pre ? pre.innerText : '';
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+    });
+  }
+
+  // Copy arbitrary text
+  function copyText(text, btn) {
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'Copied!';
+      setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+    });
+  }
+
+  // Tab switcher
+  function switchTab(btn, id) {
+    const bar = btn.closest('.tab-bar');
+    bar.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    // find all sibling tab-panels
+    let el = bar.nextElementSibling;
+    while (el && (el.classList.contains('tab-panel'))) {
+      el.classList.remove('active');
+      el = el.nextElementSibling;
+    }
+    const panel = document.getElementById('tab-' + id);
+    if (panel) panel.classList.add('active');
+  }
+
+  // Active nav link on scroll
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.nav-link');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navLinks.forEach(link => {
+          link.classList.toggle('active', link.getAttribute('href') === '#' + entry.target.id);
+        });
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+
+  sections.forEach(s => observer.observe(s));
+</script>
+
+</body>
+</html>

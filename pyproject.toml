@@ -1,6 +1,6 @@
 [project]
 name = "movie-box-dl"
-version = "1.0.0"
+version = "1.0.1"
 description = "movie-box by parthmax: an educational Python CLI movie downloader and API client with subtitle support"
 readme = "README.md"
 license="Unlicense"
@@ -23,7 +23,7 @@ keywords = [
     "asyncio",
 ]
 authors = [
-    { name = "smartwa", email = "smartwacaleb@gmail.com" }
+    { name = "Saksham Pathak", email = "pathaksaksham430@gmail.com" }
 ]
 requires-python = ">=3.10"
 classifiers = [

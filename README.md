@@ -14,6 +14,8 @@ Search, inspect, download, stream, and manage subtitles from one Python tool.
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [Install](#installation) | [Quick Start](#quick-start) | [CLI](#usage) | [Python API](#python-api) | [Disclaimer](#disclaimer) | [Docs](https://moviebox.parthmax.in)
 
+![movie-box CLI](assets/cli.png)
+
 </div>
 
 

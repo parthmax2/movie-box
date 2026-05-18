@@ -152,15 +152,13 @@ def get_caption_file_or_raise(
         if subtitle_language_keys:
             available_languages = ", ".join(list(subtitle_language_keys))
             raise ValueError(
-                f"There is no caption file for the language '{language}'. "
-                f"Choose from available ones - {available_languages}"
+                f"No subtitle/caption file matched {language!r}. Available "
+                f"caption languages: {available_languages}."
             )
         else:
             raise ZeroCaptionFileError(
-                "The target item has no any caption file. Use --no-caption or "
-                "--ignore-missing-caption flags"
-                " if you're using the commandline interface to suppress "
-                "this error."
+                "This selected item has no subtitle/caption files. Use "
+                "--no-caption to download video only, or choose another result."
             )
     return target_caption_file
 

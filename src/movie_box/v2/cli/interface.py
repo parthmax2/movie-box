@@ -1,6 +1,5 @@
 """Contains the actual console commands"""
 
-import logging
 import os
 import sys
 from pathlib import Path
@@ -8,6 +7,7 @@ from pathlib import Path
 import click
 
 from movie_box import __version__
+from movie_box.cli_errors import handle_cli_error
 from movie_box.v1.cli.downloader import Downloader
 from movie_box.v1.cli.helpers import (
     media_player_name_func_map,
@@ -627,14 +627,7 @@ def main():
         return command()
 
     except Exception as e:
-        exception_msg = str({e.args[1] if e.args and len(e.args) > 1 else e})
-
-        if DEBUG:
-            logging.exception(e)
-        else:
-            if bool(exception_msg):
-                logging.error(exception_msg)
-            sys.exit(show_any_help(e, exception_msg))
+        handle_cli_error(e, show_help=show_any_help, debug=DEBUG)
 
     sys.exit(1)
 

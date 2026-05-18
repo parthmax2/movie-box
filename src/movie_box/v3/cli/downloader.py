@@ -6,7 +6,7 @@
 import logging
 import tempfile
 from pathlib import Path
-from typing import Literal
+from typing import Callable, Literal
 
 import httpx
 from throttlebuster import DownloadedFile
@@ -46,12 +46,23 @@ from movie_box.v3.helpers import (
 )
 from movie_box.v3.http_client import MovieBoxHttpClient
 from movie_box.v3.models.downloadables import (
+    RootCaptionFileMetadata,
     RootDownloadableFilesDetailModel,
     VideoFileMetadata,
 )
+from movie_box.v3.models.details import DubModel
 from movie_box.v3.models.search import ResultsSubjectModel
 
 __all__ = ["Downloader"]
+
+DubSelector = Callable[[list[DubModel], str], str]
+QualitySelector = Callable[
+    [RootDownloadableFilesDetailModel, CustomResolutionType],
+    CustomResolutionType,
+]
+CaptionLanguageSelector = Callable[
+    [RootCaptionFileMetadata, tuple[str, ...]], tuple[str, ...]
+]
 
 
 class Downloader:
@@ -78,17 +89,19 @@ class Downloader:
         downloadable_files_detail: RootDownloadableFilesDetailModel,
         languages: list[str],
         caption_downloader: CaptionFileDownloader,
+        caption_files_detail: RootCaptionFileMetadata | None = None,
         ignore_missing_caption: bool = False,
         caption_only: bool = True,
         **run_kwargs,
     ) -> list[DownloadedFile]:
-        downloadable_captions = DownloadableCaptionFileDetails(
-            self.client_session
-        )
+        if caption_files_detail is None:
+            downloadable_captions = DownloadableCaptionFileDetails(
+                self.client_session
+            )
 
-        caption_files_detail = await downloadable_captions.get_content_model(
-            subject_id, video_file
-        )
+            caption_files_detail = await downloadable_captions.get_content_model(
+                subject_id, video_file
+            )
 
         subtitle_details_items: list[DownloadedFile] = []
 
@@ -137,6 +150,9 @@ class Downloader:
         ignore_missing_caption: bool = False,
         subject_type: SubjectType = SubjectType.MOVIES,
         dub: str = DEFAULT_DUB_LANGUAGE_NAME_OR_CODE,
+        dub_selector: DubSelector | None = None,
+        quality_selector: QualitySelector | None = None,
+        caption_language_selector: CaptionLanguageSelector | None = None,
         **run_kwargs,
     ) -> tuple[
         DownloadedFile | httpx.Response | None,
@@ -239,6 +255,8 @@ class Downloader:
 
         if item_details.dubs or subject_type is SubjectType.MOVIES:
             # some subject-types like music lack dub
+            if dub_selector and item_details.dubs:
+                dub = dub_selector(item_details.dubs, dub)
             target_dub = get_dub_or_raise(item_details, dub)
             target_subject_id = target_dub.subject_id
 
@@ -254,13 +272,31 @@ class Downloader:
             )
         )
 
+        if quality_selector:
+            quality = quality_selector(downloadable_files_detail, quality)
+
         target_media_file = resolve_media_file_to_be_downloaded(
             quality, downloadable_files_detail
         )
 
+        subtitle_details_items: list[DownloadedFile] = []
         subtitles_dir = tempfile.mkdtemp() if stream_via else caption_dir
 
         if download_caption or caption_only:
+            caption_files_detail = None
+            if caption_language_selector:
+                downloadable_captions = DownloadableCaptionFileDetails(
+                    self.client_session
+                )
+                caption_files_detail = (
+                    await downloadable_captions.get_content_model(
+                        target_subject_id, target_media_file
+                    )
+                )
+                language = caption_language_selector(
+                    caption_files_detail, tuple(language)
+                )
+
             caption_downloader = CaptionFileDownloader(
                 dir=subtitles_dir,
                 chunk_size=chunk_size,
@@ -276,6 +312,7 @@ class Downloader:
                 downloadable_files_detail=downloadable_files_detail,
                 languages=language,
                 caption_downloader=caption_downloader,
+                caption_files_detail=caption_files_detail,
                 ignore_missing_caption=ignore_missing_caption,
                 caption_only=caption_only,
                 **run_kwargs,

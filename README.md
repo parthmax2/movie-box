@@ -138,6 +138,12 @@ movie-box movie "Avatar" --stream-via mpv
 
 # Stream with specific audio dub
 movie-box series "Money Heist" --dub "English" --stream-via vlc
+
+# Download Hindi audio without subtitles
+movie-box movie "Narnia" --dub Hindi --no-caption --dir ./Movies/Narnia-Hindi
+
+# Download subtitles/captions in a specific language
+movie-box movie "Avatar" --caption --language en
 ```
 
 ### Python API
@@ -220,6 +226,17 @@ movie-box movie "Avatar" --dry-run
 # Download after selecting from search results
 movie-box movie "Avatar" -q 1080P -x English
 
+# If you do not pass --quality or --dub, movie-box asks after selection.
+# Press Enter on quality to keep the highest available option.
+movie-box movie "Avatar"
+
+# Download a Hindi dub/audio track; choose a Hindi result if the search shows one
+movie-box movie "Narnia" --dub Hindi --no-caption --dir ./Movies/Narnia-Hindi
+
+# Download captions/subtitles. The language must match a caption code or name
+# returned by MovieBox, such as en, English, IN, Filipino, etc.
+movie-box movie "Narnia" --caption --language IN
+
 # Download one TV episode
 movie-box series "Merlin" -s 1 -e 1
 
@@ -232,6 +249,31 @@ movie-box config show
 
 Config is stored in your user config directory. Set `MOVIEBOX_CONFIG_PATH` or
 `MOVIEBOX_CONFIG_HOME` if you want to choose a custom location.
+
+#### Audio dubs vs subtitle languages
+
+`--dub` and `--language` control different things:
+
+| Flag | What it selects | Example |
+|-|-|-|
+| `-u, --dub` | Audio dub track, such as Hindi audio | `movie-box movie "Narnia" --dub Hindi --no-caption` |
+| `-x, --language` | Subtitle/caption file language | `movie-box movie "Narnia" --caption --language IN` |
+
+The `Languages` column in search results is provider metadata and is not a
+complete list of available audio dubs or caption files. For Hindi audio, prefer
+passing `--dub Hindi` and selecting a result whose title includes `[Hindi]` when
+one is listed. For subtitles, use the language name or code that MovieBox
+returns for captions; if a caption is missing, the error message prints the
+available choices, for example `en` or `IN`.
+
+In the friendly `movie-box movie` command, leaving out `--dub` and `--quality`
+opens numbered prompts after you select the search result. The quality prompt
+defaults to the highest available file. Passing `--yes`, `--dub`, `--quality`,
+or `--language` skips the matching prompt.
+
+The interactive shell uses the same selection flow for movie downloads:
+`/search <title>`, then `/download <number>` prompts for audio dub and quality
+before downloading.
 
 #### CLI Architecture
 
@@ -272,7 +314,8 @@ moviebox v2 download-movie "Avatar" --yes
 | `-y, --year` | Filter by release year |
 | `-q, --quality` | Video quality: `best`, `1080p`, `720p`, `480p`, `360p`, `worst` |
 | `-d, --dir` | Download directory |
-| `-x, --language` | Subtitle language (default: English) |
+| `-u, --dub` | Audio dub language/name or code (v3/friendly CLI) |
+| `-x, --language` | Subtitle/caption language, not audio dub (default: English) |
 | `--no-caption` | Skip subtitle download |
 | `-Y, --yes` | Auto-confirm without prompts |
 
@@ -302,7 +345,8 @@ moviebox v2 download-series "Merlin" -s 1 -e 1 --auto-mode
 | `-e, --episode` | Starting episode number (required) |
 | `-l, --limit` | Number of episodes to download (default: 1) |
 | `-q, --quality` | Video quality |
-| `-x, --language` | Subtitle language |
+| `-u, --dub` | Audio dub language/name or code (v3/friendly CLI) |
+| `-x, --language` | Subtitle/caption language, not audio dub |
 | `--no-caption` | Skip subtitles |
 | `-Y, --yes` | Auto-confirm |
 | `-A, --auto-mode` | Download all remaining seasons when `--limit` is 1 |

@@ -151,25 +151,23 @@ def get_caption_file_or_raise(
     target_caption_file = caption_files_detail.get_subtitle_by_language(language)
 
     if target_caption_file is None:
-        language_subtitle_map = (
-            caption_files_detail.get_language_short_subtitle_map
-            if len(language) == 2
-            else caption_files_detail.get_language_subtitle_map
+        subtitle_language_keys = sorted(
+            {
+                *caption_files_detail.get_language_short_subtitle_map().keys(),
+                *caption_files_detail.get_language_subtitle_map().keys(),
+            }
         )
-        subtitle_language_keys = list(language_subtitle_map().keys())
 
         if subtitle_language_keys:
             available_languages = ", ".join(list(subtitle_language_keys))
             raise ValueError(
-                f"There is no caption file for the language '{language}'. "
-                f"Choose from available ones - {available_languages}"
+                f"No subtitle/caption file matched {language!r}. Available "
+                f"caption languages: {available_languages}."
             )
         else:
             raise ZeroCaptionFileError(
-                "The target item has no any caption file. Use --no-caption or "
-                "--ignore-missing-caption flags"
-                " if you're using the commandline interface to suppress "
-                "this error."
+                "This selected item has no subtitle/caption files. Use "
+                "--no-caption to download video only, or choose another result."
             )
     return target_caption_file
 

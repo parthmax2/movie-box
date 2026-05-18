@@ -1,6 +1,5 @@
 """Contains the actual console commands"""
 
-import logging
 import os
 import sys
 from pathlib import Path
@@ -8,6 +7,7 @@ from pathlib import Path
 import click
 
 from movie_box import __version__
+from movie_box.cli_errors import handle_cli_error
 from movie_box.v3.cli.downloader import Downloader
 from movie_box.v3.cli.extras import (
     homepage_content_command,
@@ -51,6 +51,14 @@ DEBUG = os.getenv("DEBUG", "0") == "1"
 qualities_resolution_map = CustomResolutionType.qualities_resolution_map()
 
 suject_types_name_value_map = SubjectType.map(ignore_names={"ALL", "TV_SERIES"})
+
+
+def normalize_quality(value: str) -> CustomResolutionType:
+    for quality in CustomResolutionType:
+        if quality.value.lower() == value.lower():
+            return quality
+
+    raise ValueError(f"Invalid quality {value!r}")
 
 
 @click.group()
@@ -305,7 +313,7 @@ def download_movie_command(
                 yes=yes,
                 dir=dir,
                 caption_dir=caption_dir,
-                quality=CustomResolutionType(quality.lower()),
+                quality=normalize_quality(quality),
                 language=language,
                 download_caption=caption,
                 caption_only=caption_only,
@@ -613,7 +621,7 @@ def download_tv_series_command(
                 yes=yes,
                 dir=dir,
                 caption_dir=caption_dir,
-                quality=CustomResolutionType(quality.lower()),
+                quality=normalize_quality(quality),
                 language=language,
                 download_caption=caption,
                 caption_only=caption_only,
@@ -652,14 +660,7 @@ def main():
         return command()
 
     except Exception as e:
-        exception_msg = str({e.args[1] if e.args and len(e.args) > 1 else e})
-
-        if DEBUG:
-            logging.exception(e)
-        else:
-            if bool(exception_msg):
-                logging.error(exception_msg)
-            sys.exit(show_any_help(e, exception_msg))
+        handle_cli_error(e, show_help=show_any_help, debug=DEBUG)
 
     sys.exit(1)
 

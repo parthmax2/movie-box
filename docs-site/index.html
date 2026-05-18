@@ -301,7 +301,7 @@
   <div class="feature-grid">
     <div class="feature-card"><div class="icon">⚡</div><h4>Interactive Shell</h4><p>Type <code>movie-box</code> and get a cyberpunk slash-command shell with autocomplete</p></div>
     <div class="feature-card"><div class="icon">🎬</div><h4>Movies &amp; TV Series</h4><p>Download or stream any movie or TV episode at up to 1080p</p></div>
-    <div class="feature-card"><div class="icon">📝</div><h4>Subtitle Support</h4><p>Download multi-language subtitles alongside video or separately</p></div>
+    <div class="feature-card"><div class="icon">📝</div><h4>Subtitle Support</h4><p>Download multi-language subtitles alongside video or separately; use dub options for audio language</p></div>
     <div class="feature-card"><div class="icon">▶️</div><h4>Direct Streaming</h4><p>Stream via MPV or VLC without saving to disk</p></div>
     <div class="feature-card"><div class="icon">🚀</div><h4>5× Faster Downloads</h4><p>Parallel chunked downloads with resumable part files</p></div>
     <div class="feature-card"><div class="icon">🐍</div><h4>Async Python API</h4><p>Clean async API with Pydantic models, sync wrappers available</p></div>
@@ -421,6 +421,7 @@ asyncio.run(main())</code></pre></div>
 <!-- ══ INTERACTIVE SHELL ══ -->
 <section id="interactive-shell">
   <h2>Interactive Shell UI</h2>
+  <p>The shell <code>/download &lt;n&gt;</code> flow prompts for audio dub and video quality before downloading.</p>
   <p>
     movie-box ships a cyberpunk interactive shell. It remembers your last search, supports
     <a href="https://python-prompt-toolkit.readthedocs.io/" target="_blank">PromptToolkit</a> autocomplete,
@@ -451,6 +452,8 @@ movie-box ui --no-animation   # skip the startup splash</code></pre></div>
     <div><span class="term-out">  ╰─────────────────────────────╯</span></div>
     <br>
     <div><span class="term-prompt">movie-box</span> <span class="term-hi">&gt;</span> <span class="term-cmd">/download 1</span></div>
+    <div><span class="term-out">  Select audio dub [1]:</span></div>
+    <div><span class="term-out">  Select video quality [1]:</span></div>
     <div><span class="term-hi">  Downloading Inception (2010).mp4 …</span></div>
     <br>
     <div><span class="term-prompt">movie-box</span> <span class="term-hi">&gt;</span> <span class="term-cmd">/exit</span></div>
@@ -469,7 +472,7 @@ movie-box ui --no-animation   # skip the startup splash</code></pre></div>
     <div class="cmd-card"><div class="cmd-name">/movie &lt;title&gt;</div><div class="cmd-desc">Search movies and preview the top match</div></div>
     <div class="cmd-card"><div class="cmd-name">/series &lt;title&gt;</div><div class="cmd-desc">Search TV series and preview the top match</div></div>
     <div class="cmd-card"><div class="cmd-name">/select &lt;n&gt;</div><div class="cmd-desc">Preview result #n from last search</div></div>
-    <div class="cmd-card"><div class="cmd-name">/download &lt;n&gt;</div><div class="cmd-desc">Download movie result #n from last search</div></div>
+    <div class="cmd-card"><div class="cmd-name">/download &lt;n&gt;</div><div class="cmd-desc">Download movie result #n; choose dub and quality</div></div>
     <div class="cmd-card"><div class="cmd-name">/config</div><div class="cmd-desc">Show saved defaults (quality, dir, language)</div></div>
     <div class="cmd-card"><div class="cmd-name">/doctor</div><div class="cmd-desc">Hint to run full environment check</div></div>
     <div class="cmd-card"><div class="cmd-name">/clear</div><div class="cmd-desc">Clear terminal and redisplay header</div></div>
@@ -485,7 +488,7 @@ Inception
 /search Inception
 2               # previews result #2
 
-# /download from last search
+# /download from last search; then choose dub and quality
 /download 2</code></pre></div>
 
   <h3>Autocomplete</h3>
@@ -542,13 +545,32 @@ movie-box search "Avatar" -l 5             # limit to 5 results</code></pre></di
   <pre><code class="language-bash">movie-box movie "Inception"
 movie-box movie "Inception" -q 1080P        # quality: best|1080P|720P|480P|360P
 movie-box movie "Inception" -d ~/Movies     # save directory
-movie-box movie "Inception" -x English -x Hindi   # subtitle languages
-movie-box movie "Inception" --dub "Hindi"   # dub language
+movie-box movie "Inception" -x English -x Hindi   # subtitle/caption languages
+movie-box movie "Inception" --dub "Hindi"   # audio dub language
+movie-box movie "Avatar"                    # prompts for dub and quality
+movie-box movie "Narnia" --dub Hindi --no-caption --dir ./Narnia-Hindi
 movie-box movie "Inception" --caption       # also download subtitles
 movie-box movie "Inception" --caption-only  # subtitles only
 movie-box movie "Inception" --stream-via mpv
 movie-box movie "Inception" --dry-run       # preview without downloading
 movie-box movie "Inception" -Y              # skip confirmation prompt</code></pre></div>
+
+  <div class="callout callout-tip"><div class="callout-label">Audio vs subtitles</div>
+    <code>--dub</code> selects the audio track, for example Hindi audio.
+    <code>--language</code> selects subtitle/caption files only. The search table
+    <code>Languages</code> column is provider metadata, not a complete list of
+    available dubs or captions. For Hindi audio, pass <code>--dub Hindi</code>
+    and choose a result with <code>[Hindi]</code> in the title when available.
+    For captions, use the code/name returned by MovieBox, such as
+    <code>en</code>, <code>English</code>, <code>IN</code>, or
+    <code>Filipino</code>.
+    In <code>movie-box movie</code>, omitting <code>--dub</code> and
+    <code>--quality</code> opens numbered prompts after search selection. The
+    quality prompt defaults to the highest available file. Passing
+    <code>--yes</code> or explicit flags skips the matching prompt.
+    The interactive shell uses the same prompt flow for
+    <code>/download &lt;n&gt;</code>.
+  </div>
 
   <h3>movie-box series</h3>
   <div class="code-wrap"><button class="copy-btn" onclick="copyCode(this)">Copy</button>
@@ -603,7 +625,7 @@ moviebox-v1 download-series "Merlin" -s 1 -e 1 -l 13 -f struct -Y</code></pre></
       <tr><td><code>-q, --quality</code></td><td>best|1080p|720p|480p|360p|worst</td><td>best</td><td>Video quality</td></tr>
       <tr><td><code>-y, --year</code></td><td>INTEGER</td><td>0</td><td>Filter by release year</td></tr>
       <tr><td><code>-d, --dir</code></td><td>DIRECTORY</td><td>$PWD</td><td>Download directory</td></tr>
-      <tr><td><code>-x, --language</code></td><td>TEXT</td><td>English</td><td>Subtitle language</td></tr>
+      <tr><td><code>-x, --language</code></td><td>TEXT</td><td>English</td><td>Subtitle/caption language, not audio dub</td></tr>
       <tr><td><code>-X, --stream-via</code></td><td>mpv|vlc</td><td>—</td><td>Stream directly</td></tr>
       <tr><td><code>-Y, --yes</code></td><td>flag</td><td>—</td><td>Skip confirmation</td></tr>
       <tr><td><code>-T, --test</code></td><td>flag</td><td>—</td><td>Test without downloading</td></tr>
@@ -663,7 +685,8 @@ moviebox-v2 download-series "Merlin" -s 2 -e 3 -l 5 -q 720p -f group</code></pre
   <div class="code-wrap"><button class="copy-btn" onclick="copyCode(this)">Copy</button>
   <pre><code class="language-bash">moviebox-v3 download-movie "Avatar" -YT                    # test, skip prompt
 moviebox-v3 download-movie "Avatar" -x en -x filipino -YT  # multiple subtitle langs
-moviebox-v3 download-movie "Avatar" --dub hi -YT            # Hindi dub
+moviebox-v3 download-movie "Narnia" --dub Hindi --no-caption -Y -d ./Narnia-Hindi
+moviebox-v3 download-movie "Narnia" --caption --language IN -Y
 moviebox-v3 download-movie "walker" -s music -YT            # music content
 moviebox-v3 download-movie "Demon Slayer" -s anime -q 1080p -Y -d ~/Videos
 moviebox-v3 download-movie "Avengers Endgame" -X mpv        # stream</code></pre></div>
@@ -835,7 +858,7 @@ asyncio.run(main())</code></pre></div>
 
   <div class="code-wrap"><button class="copy-btn" onclick="copyCode(this)">Copy</button>
   <pre><code class="language-bash">movie-box config set quality 720P
-movie-box config set language English Hindi   # multiple values
+movie-box config set language English IN      # default subtitle/caption values
 movie-box config set dir ~/Movies
 movie-box config set dub "Original Audio"
 movie-box config set caption_dir ~/Subs
@@ -849,7 +872,7 @@ movie-box config reset   # delete saved config</code></pre></div>
     <thead><tr><th>Key</th><th>Description</th><th>Example</th></tr></thead>
     <tbody>
       <tr><td><code>quality</code></td><td>Default video quality</td><td><code>720P</code></td></tr>
-      <tr><td><code>language</code></td><td>Default subtitle language(s)</td><td><code>English Hindi</code></td></tr>
+      <tr><td><code>language</code></td><td>Default subtitle/caption language(s), not audio dub</td><td><code>English IN</code></td></tr>
       <tr><td><code>dir</code></td><td>Default download directory</td><td><code>~/Movies</code></td></tr>
       <tr><td><code>caption_dir</code></td><td>Default subtitle save directory</td><td><code>~/Subs</code></td></tr>
       <tr><td><code>dub</code></td><td>Default dub language</td><td><code>Original Audio</code></td></tr>

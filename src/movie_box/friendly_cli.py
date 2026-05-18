@@ -18,6 +18,11 @@ from movie_box.v3.constants import (
 )
 from movie_box.v3.core import Search
 from movie_box.v3.http_client import MovieBoxHttpClient
+from movie_box.v3.models.details import DubModel
+from movie_box.v3.models.downloadables import (
+    RootCaptionFileMetadata,
+    RootDownloadableFilesDetailModel,
+)
 from movie_box.v3.models.search import ResultsSubjectModel
 from movie_box.tui.art import print_banner as print_tui_banner
 from movie_box.tui.art import render_banner, render_compact_header
@@ -214,6 +219,107 @@ def choose_item(
     return items[choice - 1]
 
 
+def choose_numbered_option(
+    title: str,
+    rows: list[tuple[str, str]],
+    *,
+    default: int = 1,
+) -> int:
+    if not rows:
+        raise click.ClickException(f"No choices available for {title.lower()}.")
+
+    table = Table(
+        title=title,
+        border_style=THEME.neon_soft,
+        header_style=f"bold {THEME.text}",
+        show_lines=False,
+    )
+    table.add_column("#", justify="right", style="bold cyan", no_wrap=True)
+    table.add_column("Name", style="bold")
+    table.add_column("Details", style="blue")
+
+    for index, (name, details) in enumerate(rows, start=1):
+        table.add_row(str(index), name, details)
+
+    console.print(table)
+    return click.prompt(
+        title,
+        type=click.IntRange(1, len(rows)),
+        default=default,
+        show_default=True,
+    )
+
+
+def choose_movie_dub(dubs: list[DubModel], current: str) -> str:
+    default_index = 1
+    rows = []
+    for index, dub in enumerate(dubs, start=1):
+        if current in {dub.lan_name, dub.lan_code}:
+            default_index = index
+        rows.append((dub.lan_name, f"code: {dub.lan_code}"))
+
+    choice = choose_numbered_option(
+        "Select audio dub",
+        rows,
+        default=default_index,
+    )
+    return dubs[choice - 1].lan_name
+
+
+def choose_movie_quality(
+    details: RootDownloadableFilesDetailModel,
+    current: CustomResolutionType,
+) -> CustomResolutionType:
+    quality_items = sorted(
+        details.get_quality_downloads_map().items(),
+        key=lambda item: item[1].resolution,
+        reverse=True,
+    )
+    if not quality_items:
+        return current
+
+    default_index = 1
+    rows = []
+    for index, (quality, media_file) in enumerate(quality_items, start=1):
+        if quality == current:
+            default_index = index
+        rows.append((quality.value, f"{media_file.resolution}p"))
+
+    choice = choose_numbered_option(
+        "Select video quality",
+        rows,
+        default=default_index,
+    )
+    return quality_items[choice - 1][0]
+
+
+def choose_caption_languages(
+    captions: RootCaptionFileMetadata,
+    current: tuple[str, ...],
+) -> tuple[str, ...]:
+    caption_items = captions.captions
+    if not caption_items:
+        return current
+
+    default_index = 1
+    normalized_current = {item.casefold() for item in current}
+    rows = []
+    for index, caption in enumerate(caption_items, start=1):
+        if (
+            caption.lan.casefold() in normalized_current
+            or caption.lan_name.casefold() in normalized_current
+        ):
+            default_index = index
+        rows.append((caption.lan_name, f"code: {caption.lan}"))
+
+    choice = choose_numbered_option(
+        "Select subtitle language",
+        rows,
+        default=default_index,
+    )
+    return (caption_items[choice - 1].lan,)
+
+
 async def fetch_search_items(
     query: str,
     *,
@@ -362,6 +468,13 @@ def movie_command(
                 stream_via=stream_via,
                 search_function=rich_search_function,
                 dub=dub_value,
+                dub_selector=None if yes or dub else choose_movie_dub,
+                quality_selector=(
+                    None if yes or quality else choose_movie_quality
+                ),
+                caption_language_selector=(
+                    None if yes or language else choose_caption_languages
+                ),
             )
 
     run(run_movie())
@@ -582,6 +695,8 @@ def ui_command(no_animation: bool):
                         stream_via=None,
                         search_function=selected_item_search_function,
                         dub=dub_value,
+                        dub_selector=choose_movie_dub,
+                        quality_selector=choose_movie_quality,
                     )
 
             render_selected_item(selected)

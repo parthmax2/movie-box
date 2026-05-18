@@ -51,7 +51,7 @@ Type `/help` at any time to print the command deck.
 | `/movie` | `/movie <title>` | Search movies and preview the top match |
 | `/series` | `/series <title>` | Search TV series and preview the top match |
 | `/select` | `/select <number>` | Preview a result from the last `/search` by its table number |
-| `/download` | `/download <number>` | Download the chosen movie result from the last `/search` |
+| `/download` | `/download <number>` | Download the chosen movie result from the last `/search`; prompts for audio dub and quality |
 | `/config` | `/config` | Show your saved CLI defaults (quality, directory, language, etc.) |
 | `/doctor` | `/doctor` | Reminder to run `movie-box doctor` for a full environment check |
 | `/clear` | `/clear` | Clear the terminal and redisplay the compact header |
@@ -90,7 +90,7 @@ movie-box                   # enter the shell
 
 /search Inception           # search for a title
 3                           # preview result #3
-/download 3                 # download that movie
+/download 3                 # choose dub, choose quality, then download
 
 /series Breaking Bad        # preview a TV series match
                             # use movie-box series on the CLI for episode downloads
@@ -114,7 +114,11 @@ movie-box config show
 movie-box config reset
 ```
 
-The shell reads these defaults automatically when you run `/download`.
+The shell reads these defaults automatically when you run `/download`. During
+download it shows numbered choices for audio dub and video quality. The saved
+`dub` and `quality` values become the default selections when they are available;
+otherwise the quality prompt defaults to the highest available file. Caption
+language defaults are used by the one-shot `movie-box movie --caption` command.
 
 Config is stored under your system's user config directory. Override the
 location with environment variables:

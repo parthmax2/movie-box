@@ -166,19 +166,30 @@ def get_dub_or_raise(
 
     lan_names = []
     lan_codes = []
+    normalized = language_name_or_code.casefold()
 
     for dub in item_details.dubs:
         if (
-            dub.lan_name == language_name_or_code
-            or dub.lan_code == language_name_or_code
+            dub.lan_name.casefold() == normalized
+            or dub.lan_code.casefold() == normalized
         ):
             return dub
         else:
             lan_names.append(dub.lan_name)
             lan_codes.append(dub.lan_code)
 
+    if not lan_names and not lan_codes:
+        raise MissingDubError(
+            f"No audio dubs are available for this selected item, so "
+            f"{language_name_or_code!r} cannot be used. Choose a different "
+            "search result, or remove --dub to use the default audio when "
+            "available."
+        )
+
+    available = ", ".join(
+        sorted({*lan_names, *lan_codes}, key=lambda item: item.casefold())
+    )
     raise MissingDubError(
-        f"No dub matched that language name or language code "
-        f"{language_name_or_code!r}. Availables ones include - "
-        f"language_names : {lan_names}, language_codes : {lan_codes}"
+        f"No audio dub matched {language_name_or_code!r}. Available dubs: "
+        f"{available}."
     )

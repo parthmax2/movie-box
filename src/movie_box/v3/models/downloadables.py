@@ -88,9 +88,13 @@ class RootCaptionFileMetadata(BaseModel):
         self, language: str
     ) -> CaptionFileMetadata | None:
         """Both `English` and `en` will return same thing"""
-        if len(language) == 2:
-            return self.get_language_short_subtitle_map().get(language.lower())
-        return self.get_language_subtitle_map().get(language.capitalize())
+        normalized = language.casefold()
+        for subtitle_file in self.captions:
+            if subtitle_file.lan.casefold() == normalized:
+                return subtitle_file
+            if subtitle_file.lan_name.casefold() == normalized:
+                return subtitle_file
+        return None
 
 
 class CollectionResolutionModel(BaseModel):

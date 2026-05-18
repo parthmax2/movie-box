@@ -54,7 +54,7 @@ moviebox-v3 download-movie [OPTIONS] TITLE
 | `-s, --subject-type` | `movies\|education\|music\|anime\|unknown` | `movies` | Subject type filter |
 | `-y, --year` | `INTEGER` | `0` | Year filter for the movie |
 | `-q, --quality` | `360p\|480p\|720p\|1080p\|best\|worst` | `best` | Media quality to download |
-| `-u, --dub` | `TEXT` | `Original Audio` | Dub language name or code |
+| `-u, --dub` | `TEXT` | `Original Audio` | Audio dub language name or code |
 | `-Y, --yes` | flag | — | Skip confirmation prompt |
 
 #### Output Paths
@@ -77,10 +77,23 @@ moviebox-v3 download-movie [OPTIONS] TITLE
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `-x, --language` | `TEXT` | `English` | Caption language filter. Pass multiple times to download multiple languages |
+| `-x, --language` | `TEXT` | `English` | Caption/subtitle language filter, not audio dub. Pass multiple times to download multiple caption files |
 | `--caption / --no-caption` | flag | `caption` | Enable or disable caption download |
 | `-O, --caption-only` | flag | — | Download caption file only; skip video |
 | `-I, --ignore-missing-caption` | flag | — | Proceed with download even if caption is missing |
+
+!!! tip "Audio dubs vs captions"
+    Use `--dub Hindi` to request Hindi audio. Use `--language Hindi`,
+    `--language en`, or another caption code/name only when downloading
+    subtitles with `--caption`. The search result `Languages` metadata is not a
+    complete dub selector. For Hindi audio, select a result whose title includes
+    `[Hindi]` when one is available.
+
+!!! note "Friendly CLI prompts"
+    The top-level `movie-box movie` command uses v3 internally. If you leave out
+    `--dub` or `--quality`, it asks for audio dub and video quality after you
+    choose a search result. The quality prompt defaults to the highest available
+    file. Passing `--yes` or explicit flags skips the matching prompt.
 
 #### Download Behaviour
 
@@ -125,8 +138,11 @@ moviebox-v3 download-movie avatar -YT
 # Download with multiple caption languages (English + Filipino)
 moviebox-v3 download-movie avatar -YT -x en -x filipino
 
-# Download Hindi dub
-moviebox-v3 download-movie avatar --dub hi -YT
+# Download Hindi audio without captions
+moviebox-v3 download-movie "Narnia" --dub Hindi --no-caption -Y -d ./Narnia-Hindi
+
+# Download captions using a provider caption code/name
+moviebox-v3 download-movie "Narnia" --caption --language IN -Y
 
 # Download music content
 moviebox-v3 download-movie walker -s music -YT
@@ -165,7 +181,7 @@ moviebox-v3 download-series [OPTIONS] TITLE
 | `-e, --episode` | `INTEGER (1–1000)` | `1` | Episode within the selected season to start from |
 | `-l, --limit` | `INTEGER (-1–1000)` | `1` | Total episodes to download; set `-1` to disable the limit |
 | `-q, --quality` | `360p\|480p\|720p\|1080p\|best\|worst` | `best` | Media quality to download |
-| `-u, --dub` | `TEXT` | `Original Audio` | Dub language name or code |
+| `-u, --dub` | `TEXT` | `Original Audio` | Audio dub language name or code |
 | `-Y, --yes` | flag | — | Skip series confirmation prompt |
 | `-A, --auto-mode` | flag | — | Download all remaining episodes across all remaining seasons (shortcut for `--limit -1`) |
 
@@ -229,7 +245,7 @@ Merlin (2009)/
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `-x, --language` | `TEXT` | `English` | Caption language filter. Pass multiple times to download multiple languages |
+| `-x, --language` | `TEXT` | `English` | Caption/subtitle language filter, not audio dub. Pass multiple times to download multiple caption files |
 | `--caption / --no-caption` | flag | `caption` | Enable or disable caption download |
 | `-O, --caption-only` | flag | — | Download caption files only; skip video |
 | `-I, --ignore-missing-caption` | flag | — | Proceed with episode download even if caption is missing |
@@ -457,6 +473,6 @@ Episode caption: {title} S{season}E{episode}.{lan}.{ext}
 | `-T, --test` | download commands | Test without downloading |
 | `-X, --stream-via` | download commands | Stream via `mpv` or `vlc` |
 | `-u, --dub` | download commands | Select dub language |
-| `-x, --language` | download commands | Caption language; repeatable for multiple languages |
+| `-x, --language` | download commands | Caption/subtitle language, not audio dub; repeatable for multiple caption files |
 | `-O, --caption-only` | download commands | Fetch captions only |
 | `-I, --ignore-missing-caption` | download commands | Proceed even if caption is absent |

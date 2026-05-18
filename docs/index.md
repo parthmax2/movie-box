@@ -20,6 +20,7 @@ and resumable media workflows.
 * **Multi-Version Support** : Access multiple API versions (`v1`, `v2`, `v3`) for different provider services
 * **Download Movies & TV Series** : High-quality downloads with multiple resolution options
 * **Subtitle Support** : Download subtitles in multiple languages
+* **Dub Selection** : In v3/friendly CLI, use `--dub` for audio language and `--language` for subtitle/caption files
 * **Direct Streaming** : Stream via MPV or VLC without downloading (CLI only)
 * **Faster Downloads** : Up to 5× faster than standard downloads
 * **Async & Sync Support** : Fully asynchronous with synchronous fallback

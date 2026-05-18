@@ -1,5 +1,3 @@
-import logging
-import os
 import shutil
 import sys
 from importlib import metadata
@@ -8,6 +6,7 @@ from importlib.util import find_spec
 import click
 
 from movie_box import __version__
+from movie_box.cli_errors import handle_cli_error
 from movie_box.friendly_cli import FRIENDLY_COMMANDS, render_banner, ui_command
 from movie_box.utils import build_command_group
 from movie_box.v1.cli.helpers import show_any_help
@@ -93,15 +92,6 @@ def cli_entry():
         return _cli_entry()
 
     except Exception as e:
-        exception_msg = str({e.args[1] if e.args and len(e.args) > 1 else e})
-
-        DEBUG = os.getenv("DEBUG", "0") == "1"
-
-        if DEBUG:
-            logging.exception(e)
-        else:
-            if bool(exception_msg):
-                logging.error(exception_msg)
-            sys.exit(show_any_help(e, exception_msg))
+        handle_cli_error(e, show_help=show_any_help)
 
     sys.exit(1)

@@ -60,7 +60,7 @@ moviebox-v3 = "movie_box.v3.cli.interface:main"
 [project.urls]
 homepage = "https://github.com/parthmax2/movie-box"
 repository = "https://github.com/parthmax2/movie-box"
-documentation = "https://github.com/parthmax2/movie-box"
+documentation = "https://moviebox.parthmax.in"
 issues = "https://github.com/parthmax2/movie-box/issues"
 source = "https://github.com/parthmax2/movie-box"
 

@@ -23,7 +23,7 @@ TITLE_FALLBACK = (
 
 def package_version() -> str:
     try:
-        return metadata.version("movie-box")
+        return metadata.version("movie-box-dl")
     except metadata.PackageNotFoundError:
         return "dev"
 

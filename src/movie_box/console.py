@@ -36,7 +36,7 @@ class BrandedGroup(click.Group):
 
 
 @click.group(cls=BrandedGroup, invoke_without_command=True)
-@click.version_option(package_name="movie-box")
+@click.version_option(package_name="movie-box-dl")
 @click.pass_context
 def _cli_entry(ctx: click.Context):
     """Search and download movies/tv-series and their subtitles

@@ -213,7 +213,6 @@ test.py
 *.mp4
 *.mkv
 *.webm
-*.mpv
 *.srt
 commit-msg*
 *.html

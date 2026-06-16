@@ -539,7 +539,10 @@ def choose_item(
     items: list[ResultsSubjectModel], *, yes: bool = False
 ) -> ResultsSubjectModel:
     if not items:
-        raise click.ClickException("No results found. Try a different query.")
+        raise click.ClickException(
+            "No results found. Bold of you to assume that movie exists — "
+            "try a different query."
+        )
     if yes or len(items) == 1:
         return items[0]
 
@@ -1069,6 +1072,7 @@ def ui_command(no_animation: bool):
             "series",
             "select",
             "download",
+            "credits",
         }:
             argument = command_line.strip()
             command = "search"
@@ -1097,6 +1101,28 @@ def ui_command(no_animation: bool):
             console.print(
                 "[dim]Run[/dim] [bold]movie-box doctor[/bold] "
                 "[dim]for the full environment check.[/dim]"
+            )
+            continue
+        if command == "credits":
+            console.print(
+                Panel(
+                    "\n".join(
+                        [
+                            "built by parthmax",
+                            "powered by httpx, pydantic, rich, click",
+                            "fueled by spite for ad-walled redirects",
+                            "",
+                            "you've reached the end of the documentation.",
+                            "there is no prize.",
+                            "there is a --help flag.",
+                            "",
+                            "long live the moviebox spirit.",
+                        ]
+                    ),
+                    title="MOVIE-BOX",
+                    border_style=THEME.neon,
+                    title_align="center",
+                )
             )
             continue
         if command == "select":

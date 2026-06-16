@@ -1,6 +1,6 @@
 [project]
 name = "movie-box-dl"
-version = "2.0.0"
+version = "2.0.1"
 description = "movie-box by parthmax: an educational Python CLI movie downloader and API client with subtitle support"
 readme = "README.md"
 license = { text = "Unlicense" }
@@ -43,8 +43,10 @@ classifiers = [
 ]
 dependencies = [
     "bs4>=0.0.2",
+    "click>=8.2.1",
     "httpx[socks]>=0.28.1",
     "pydantic>=2.11.7",
+    "rich>=13.7.1",
     "throttlebuster>=0.1.12",
 ]
 
@@ -64,10 +66,8 @@ source = "https://github.com/parthmax2/movie-box"
 
 [project.optional-dependencies]
 cli = [
-    "click>=8.2.1",
     "prompt-toolkit>=3.0.43",
     "pyfiglet>=1.0.2",
-    "rich>=13.7.1",
     "textual>=0.89.1",
 ]
 

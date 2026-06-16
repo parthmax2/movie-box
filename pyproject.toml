@@ -1,6 +1,6 @@
 [project]
 name = "movie-box-dl"
-version = "1.0.2"
+version = "2.0.0"
 description = "movie-box by parthmax: an educational Python CLI movie downloader and API client with subtitle support"
 readme = "README.md"
 license = { text = "Unlicense" }

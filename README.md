@@ -33,7 +33,7 @@ a title than click through five ad-walled redirects to find one.
 
 <div align="center">
 
-![movie-box](assets/moviebox.gif)
+<img src="assets/moviebox.gif" alt="movie-box" width="800">
 
 </div>
 
@@ -91,11 +91,31 @@ custom config) are in the [docs](https://moviebox.parthmax.in).
 
 ## Why not just use a browser?
 
-Because the browser is where the ads, the fake "Download" buttons, and the
-six redirect pages live. `movie-box` does the part you actually wanted —
-search, pick, watch — in the time it takes those pages to load their first
-pop-up.
+| | Typical "free movie" site | `movie-box` |
+|-|-|-|
+| Ads before you get there | Wall-to-wall | None |
+| Steps to actually watch | Five redirects, three fake "Download" buttons | One command |
+| Player | A toolbar you didn't ask for | Your browser, or VLC/MPV |
+| Subtitles | Pop-up hell | Built in, pick a language |
+| Cost | "Free" (your time, your patience) | Free |
 
+## FAQ
+
+**Is this legal?**
+As legal as a remote control. `movie-box` doesn't host anything and doesn't
+break any locks — see the [disclaimer](#disclaimer). What you point it at
+is on you.
+
+**Do I need a membership card?**
+No card, no signup, no "create an account to continue." Just `pip install`.
+
+**What if I don't have VLC or MPV installed?**
+Pick **stream** instead of **download** when asked — it opens straight in
+your browser. No extra software, ever.
+
+**Why does this look like I'm hacking the Pentagon?**
+Because typing a title felt cooler than clicking through five pop-ups. We
+stand by that decision.
 
 ## Disclaimer
 

@@ -32,7 +32,7 @@ multiple dubs, and resumable transfers, built for people who'd rather type
 a title than click through five ad-walled redirects to find one.
 
 <div align="center">
-  <img src="assets/moviebox.gif" width="800" alt="Movie Box ">
+  <img src="assets/moviebox.gif" width="80%" alt="Movie Box ">
 </div>
 
 ## Install

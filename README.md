@@ -33,7 +33,9 @@ movie downloader CLI and API client.
 ```sh
 pip install "movie-box-dl[cli]"
 movie-box doctor
-movie-box                        # launches the interactive UI
+movie-box                        # launches the guided download flow
+movie-box "Avatar"               # starts the guided flow with a title
+movie-box shell                  # opens the interactive shell
 movie-box search "Avatar" --select
 moviebox v3 download-movie "Avatar" --yes
 ```
@@ -114,9 +116,16 @@ Download from [mpv.io/installation](https://mpv.io/installation/).
 # Check setup
 movie-box doctor
 
-# Launch the interactive cyberpunk shell (both commands are identical)
+# Launch the guided download flow (both commands are identical)
 movie-box
 moviebox
+
+# Start directly with a search query
+movie-box "Avatar"
+moviebox titans
+
+# Open the interactive cyberpunk shell
+movie-box shell
 
 # Launch without the startup animation
 movie-box ui --no-animation
@@ -181,12 +190,14 @@ moviebox v2 --help
 
 | Command | Description |
 |-|-|
-| `movie-box` / `moviebox` | Launch the interactive cyberpunk shell (no subcommand needed) |
+| `movie-box` / `moviebox` | Launch the guided movie/series download flow |
+| `movie-box <title>` | Search immediately, then guide selection and download |
 | `movie-box search` | Search with colored results and optional numbered selection |
 | `movie-box movie` | Search, select, download, or stream a movie |
 | `movie-box series` | Search, select, download, or stream TV series episodes |
 | `movie-box config` | Save defaults such as quality, language, and download directory |
-| `movie-box ui` | Open the animated cyberpunk interactive shell (alias for the above) |
+| `movie-box shell` | Open the slash-command interactive shell |
+| `movie-box ui` | Open the animated cyberpunk interactive shell |
 | `movie-box app` | Open the full-screen Textual dashboard |
 | `movie-box doctor` | Check Python, dependencies, package imports, and media players |
 | `download-movie` | Search, download, or stream movies, anime, music, and educational content |
@@ -201,11 +212,18 @@ The top-level commands use v3 internally and add a cleaner search table,
 numbered selection, previews, a cyberpunk startup surface, and saved defaults:
 
 ```sh
-# Open the interactive shell — typing movie-box or moviebox alone is enough
+# Open the guided download flow
 movie-box
 moviebox
 
-# You can also use the explicit subcommand; it is identical
+# Start directly with a title
+movie-box "Avatar"
+moviebox titans
+
+# Open the slash-command shell
+movie-box shell
+
+# You can also use the original UI subcommand
 movie-box ui
 
 # Open instantly without the startup animation

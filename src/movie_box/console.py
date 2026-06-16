@@ -7,7 +7,12 @@ import click
 
 from movie_box import __version__
 from movie_box.cli_errors import handle_cli_error
-from movie_box.friendly_cli import FRIENDLY_COMMANDS, render_banner, ui_command
+from movie_box.friendly_cli import (
+    FRIENDLY_COMMANDS,
+    quick_command,
+    render_banner,
+    ui_command,
+)
 from movie_box.utils import build_command_group
 from movie_box.v1.cli.helpers import show_any_help
 from movie_box.v1.cli.interface import get_commands_map
@@ -21,6 +26,14 @@ class BrandedGroup(click.Group):
         formatter.write("\n")
         super().format_help(ctx, formatter)
 
+    def resolve_command(self, ctx, args):
+        try:
+            return super().resolve_command(ctx, args)
+        except click.UsageError:
+            if args and not args[0].startswith("-"):
+                return "quick", quick_command, args
+            raise
+
 
 @click.group(cls=BrandedGroup, invoke_without_command=True)
 @click.version_option(package_name="movie-box")
@@ -31,7 +44,7 @@ def _cli_entry(ctx: click.Context):
 
     Developed by parthmax."""
     if ctx.invoked_subcommand is None:
-        ctx.invoke(ui_command)
+        ctx.invoke(quick_command)
 
 
 @_cli_entry.group()
@@ -80,6 +93,7 @@ def doctor():
 
 
 _cli_entry.add_command(doctor, "doctor")
+_cli_entry.add_command(ui_command, "shell")
 for command in FRIENDLY_COMMANDS:
     _cli_entry.add_command(command)
 build_command_group(v1, get_commands_map())

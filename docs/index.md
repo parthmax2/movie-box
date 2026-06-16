@@ -25,7 +25,7 @@ and resumable media workflows.
 * **Faster Downloads** : Up to 5× faster than standard downloads
 * **Async & Sync Support** : Fully asynchronous with synchronous fallback
 * **Search & Discovery** : Find movies, trending content, and popular searches
-* **Cyberpunk Interactive Shell** : Type `movie-box` or `moviebox` to enter a slash-command shell with autocomplete, animated startup, and a full-screen Textual dashboard (`movie-box app`)
+* **Guided CLI UX** : Type `movie-box`, `moviebox`, or `moviebox <title>` for a guided movie/series download flow; use `movie-box shell` for the slash-command shell and `movie-box app` for the full-screen Textual dashboard
 * **Developer-Friendly** : Python API with Pydantic models
 * **Environment Checks** : Run `movie-box doctor` to verify Python, dependencies, and media players
 

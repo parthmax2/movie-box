@@ -1,5 +1,6 @@
 import json
 import os
+import re
 from pathlib import Path
 from typing import Any
 
@@ -16,9 +17,15 @@ from movie_box.v3.constants import (
     CustomResolutionType,
     SubjectType,
 )
-from movie_box.v3.core import Search
+from movie_box.v3.core import (
+    DownloadableFilesDetail,
+    ItemDetails,
+    Search,
+    SeasonDetails,
+)
 from movie_box.v3.http_client import MovieBoxHttpClient
 from movie_box.v3.models.details import DubModel
+from movie_box.v3.models.details import SeasonsModel
 from movie_box.v3.models.downloadables import (
     RootCaptionFileMetadata,
     RootDownloadableFilesDetailModel,
@@ -32,6 +39,10 @@ from movie_box.tui.textual_app import launch_textual_app
 from movie_box.tui.theme import THEME
 
 console = Console()
+
+QUICK_DEFAULT_DUB = "English"
+TITLE_LANGUAGE_PATTERN = re.compile(r"\[([^\]]+)\]")
+SEARCH_STOP_WORDS = {"a", "an", "and", "the"}
 
 CONFIG_KEYS = {
     "dir",
@@ -150,6 +161,328 @@ def format_languages(item: ResultsSubjectModel) -> str:
     return ", ".join(languages) + suffix if languages else "-"
 
 
+def display_subject_type(subject_type: SubjectType) -> str:
+    if subject_type is SubjectType.TV_SERIES:
+        return "Series"
+    if subject_type is SubjectType.MOVIES:
+        return "Movie"
+    return subject_type.name.replace("_", " ").title()
+
+
+def normalize_search_text(value: str) -> str:
+    return re.sub(r"[^a-z0-9]+", " ", value.casefold()).strip()
+
+
+def is_confident_title_match(query: str, item: ResultsSubjectModel) -> bool:
+    normalized_query = normalize_search_text(query)
+    normalized_title = normalize_search_text(item.title)
+    if normalized_query == normalized_title:
+        return True
+
+    query_tokens = {
+        token for token in normalized_query.split() if token not in SEARCH_STOP_WORDS
+    }
+    title_tokens = set(normalized_title.split())
+    return bool(query_tokens) and query_tokens.issubset(title_tokens)
+
+
+def language_hint_from_title(title: str) -> str | None:
+    match = TITLE_LANGUAGE_PATTERN.search(title)
+    if not match:
+        return None
+    hint = match.group(1).replace("dub", "").strip()
+    return hint or None
+
+
+def is_supported_quick_type(item: ResultsSubjectModel) -> bool:
+    return item.subject_type in {SubjectType.MOVIES, SubjectType.TV_SERIES}
+
+
+def quick_subject_label(subject_type: SubjectType) -> str:
+    if subject_type is SubjectType.TV_SERIES:
+        return "Series"
+    if subject_type is SubjectType.MOVIES:
+        return "Movie"
+    return display_subject_type(subject_type)
+
+
+def choose_quick_subject_type(
+    query: str,
+    items: list[ResultsSubjectModel],
+) -> SubjectType:
+    supported_items = [item for item in items if is_supported_quick_type(item)]
+    if not supported_items:
+        raise click.ClickException("No movie or series results found.")
+
+    first_item = supported_items[0]
+    if is_confident_title_match(query, first_item):
+        return first_item.subject_type
+
+    available_types = {item.subject_type for item in supported_items}
+    if len(available_types) == 1:
+        return first_item.subject_type
+
+    type_choice = click.prompt(
+        "Type",
+        type=click.Choice(["auto", "movie", "series"], case_sensitive=False),
+        default="auto",
+        show_default=True,
+    ).lower()
+    if type_choice == "movie":
+        return SubjectType.MOVIES
+    if type_choice == "series":
+        return SubjectType.TV_SERIES
+    return first_item.subject_type
+
+
+def choose_quick_result(
+    items: list[ResultsSubjectModel],
+) -> ResultsSubjectModel:
+    supported_items = [item for item in items if is_supported_quick_type(item)]
+    if not supported_items:
+        raise click.ClickException("No movie or series results found.")
+
+    if len(supported_items) == 1:
+        return supported_items[0]
+
+    render_results_table(supported_items)
+    return choose_item(supported_items)
+
+
+def default_audio_name(selected: ResultsSubjectModel, config: dict[str, Any]) -> str:
+    return (
+        language_hint_from_title(selected.title)
+        or config.get("dub")
+        or QUICK_DEFAULT_DUB
+    )
+
+
+def choose_quick_item(
+    query: str,
+    items: list[ResultsSubjectModel],
+    subject_type: SubjectType,
+) -> ResultsSubjectModel:
+    matching_items = [
+        item for item in items if item.subject_type is subject_type
+    ]
+    if not matching_items:
+        label = quick_subject_label(subject_type)
+        raise click.ClickException(f"No {label} results found.")
+
+    if len(matching_items) == 1 or is_confident_title_match(
+        query, matching_items[0]
+    ):
+        return matching_items[0]
+
+    console.print(
+        f"[yellow]Multiple {quick_subject_label(subject_type)} matches found.[/yellow]"
+    )
+    render_results_table(matching_items)
+    return choose_item(matching_items)
+
+
+def choose_default_dub(dubs: list[DubModel], current: str) -> str:
+    preferred = current.casefold()
+    for dub in dubs:
+        if preferred in {dub.lan_name.casefold(), dub.lan_code.casefold()}:
+            return dub.lan_name
+
+    for fallback in ("English", "Original"):
+        normalized_fallback = fallback.casefold()
+        for dub in dubs:
+            if normalized_fallback in {
+                dub.lan_name.casefold(),
+                dub.lan_code.casefold(),
+            }:
+                return dub.lan_name
+
+    return dubs[0].lan_name
+
+
+def choose_quick_dub(dubs: list[DubModel], current: str) -> DubModel | None:
+    if not dubs:
+        return None
+
+    default_index = 1
+    normalized_current = current.casefold()
+    rows = []
+    for index, dub in enumerate(dubs, start=1):
+        if normalized_current in {
+            dub.lan_name.casefold(),
+            dub.lan_code.casefold(),
+        }:
+            default_index = index
+        rows.append((dub.lan_name, f"code: {dub.lan_code}"))
+
+    if len(dubs) == 1:
+        console.print(f"[dim]Audio:[/dim] {dubs[0].lan_name}")
+        return dubs[0]
+
+    choice = choose_numbered_option(
+        "Audio language",
+        rows,
+        default=default_index,
+    )
+    return dubs[choice - 1]
+
+
+def choose_quick_quality(
+    details: RootDownloadableFilesDetailModel,
+    current: CustomResolutionType,
+) -> CustomResolutionType:
+    quality_items = sorted(
+        {
+            CustomResolutionType(f"{item.resolution.value}P")
+            for item in details.collection_resolutions
+            if item.resolution.value > 0
+        },
+        key=lambda item: CustomResolutionType.convert_to_default_resolution(
+            item
+        ).value,
+        reverse=True,
+    )
+
+    if not quality_items and details.subject_type is not SubjectType.TV_SERIES:
+        quality_items = sorted(
+            details.get_quality_downloads_map(),
+            key=lambda item: CustomResolutionType.convert_to_default_resolution(
+                item
+            ).value,
+            reverse=True,
+        )
+
+    if not quality_items:
+        return current
+
+    default_index = 1
+    rows = []
+    for index, quality in enumerate(quality_items, start=1):
+        if quality == current:
+            default_index = index
+        details = "best available" if index == 1 else "available"
+        rows.append((quality.value, details))
+
+    choice = choose_numbered_option(
+        "Video quality",
+        rows,
+        default=default_index,
+    )
+    return quality_items[choice - 1]
+
+
+def render_seasons_table(seasons: SeasonsModel) -> None:
+    table = Table(
+        title="Available seasons",
+        border_style=THEME.neon_soft,
+        header_style=f"bold {THEME.text}",
+        show_lines=False,
+    )
+    table.add_column("Season", justify="right", style="bold cyan")
+    table.add_column("Episodes", justify="right", style="green")
+    table.add_column("Qualities", style="blue")
+
+    for season in seasons.seasons:
+        qualities = ", ".join(
+            f"{item.resolution.value}P"
+            for item in sorted(
+                season.resolutions,
+                key=lambda item: item.resolution.value,
+                reverse=True,
+            )
+        )
+        table.add_row(str(season.se), str(season.max_ep), qualities or "-")
+
+    console.print(table)
+
+
+def choose_quick_series_range(seasons: SeasonsModel) -> tuple[int, int, int]:
+    render_seasons_table(seasons)
+    season_numbers = [season.se for season in seasons.seasons]
+    default_season = season_numbers[0] if season_numbers else 1
+    season = click.prompt(
+        "Season",
+        type=click.Choice([str(item) for item in season_numbers]),
+        default=str(default_season),
+        show_default=True,
+    )
+    season_number = int(season)
+    season_details = seasons.get_season_by_number(season_number)
+    episode = click.prompt(
+        f"Start episode (1-{season_details.max_ep})",
+        type=click.IntRange(1, season_details.max_ep),
+        default=1,
+        show_default=True,
+    )
+    remaining = season_details.max_ep - episode + 1
+    limit = click.prompt(
+        f"Download count (1-{remaining})",
+        type=click.IntRange(1, remaining),
+        default=1,
+        show_default=True,
+    )
+    return season_number, episode, limit
+
+
+def format_episode_range(season: int, episode: int, limit: int) -> str:
+    if limit <= 1:
+        return f"S{season}E{episode}"
+    end_episode = episode + limit - 1
+    return f"S{season}E{episode}-E{end_episode}"
+
+
+def choose_action() -> str:
+    """Ask whether to download to disk or stream in the browser."""
+    choice = choose_numbered_option(
+        "What next?",
+        [
+            ("Download", "save to your folder"),
+            ("Stream", "watch now in your browser, no player needed"),
+        ],
+        default=1,
+    )
+    return "download" if choice == 1 else "stream"
+
+
+def render_download_summary(
+    *,
+    selected: ResultsSubjectModel,
+    audio: str,
+    quality: CustomResolutionType,
+    target_dir: str | Path,
+    season: int | None = None,
+    episode: int | None = None,
+    limit: int | None = None,
+    stream: bool = False,
+) -> None:
+    rows = [
+        ("Title", selected.title),
+        ("Type", display_subject_type(selected.subject_type)),
+        ("Year", item_year(selected)),
+        ("Audio", audio),
+        ("Quality", quality.value),
+        ("Stream", "Browser (no download)") if stream else ("Folder", str(target_dir)),
+    ]
+    if selected.subject_type is SubjectType.TV_SERIES:
+        rows.insert(
+            3,
+            (
+                "Episodes",
+                format_episode_range(season or 1, episode or 1, limit or 1),
+            ),
+        )
+
+    summary = "\n".join(
+        f"[bold]{label}:[/bold] {value}" for label, value in rows
+    )
+    console.print(
+        Panel(
+            summary,
+            title="Stream summary" if stream else "Download summary",
+            border_style=THEME.neon_soft,
+        )
+    )
+
+
 def filter_items_by_year(
     items: list[ResultsSubjectModel], year: int | None
 ) -> list[ResultsSubjectModel]:
@@ -174,13 +507,13 @@ def render_results_table(items: list[ResultsSubjectModel]) -> None:
     table.add_column("Type", style="magenta")
     table.add_column("Year", justify="right", style="green")
     table.add_column("IMDb", justify="right", style="yellow")
-    table.add_column("Languages", style="blue", overflow="ellipsis")
+    table.add_column("Listed Langs", style="blue", overflow="ellipsis")
 
     for index, item in enumerate(items, start=1):
         table.add_row(
             str(index),
             item.title,
-            item.subject_type.name.replace("_", " ").title(),
+            display_subject_type(item.subject_type),
             item_year(item),
             f"{item.imdb_rating_value:g}" if item.imdb_rating_value else "-",
             format_languages(item),
@@ -193,10 +526,10 @@ def render_selected_item(item: ResultsSubjectModel) -> None:
     imdb = f"{item.imdb_rating_value:g}" if item.imdb_rating_value else "-"
     details = (
         f"[bold]{item.title}[/bold]\n"
-        f"Type: {item.subject_type.name.replace('_', ' ').title()}\n"
+        f"Type: {display_subject_type(item.subject_type)}\n"
         f"Year: {item_year(item)}\n"
         f"IMDb: {imdb}\n"
-        f"Languages: {format_languages(item)}\n"
+        f"Listed Langs: {format_languages(item)}\n"
         f"Subject ID: {item.subject_id}"
     )
     console.print(Panel(details, title="Selected", border_style="green"))
@@ -372,6 +705,136 @@ async def rich_search_function(
     return selected
 
 
+@click.command("quick", hidden=True)
+@click.argument("query_parts", nargs=-1)
+def quick_command(query_parts: tuple[str, ...] = ()):
+    """Guided one-screen download flow."""
+
+    print_compact_header()
+    config = load_config()
+    query = " ".join(query_parts).strip()
+    if not query:
+        query = click.prompt("Search", type=str).strip()
+    if not query:
+        raise click.ClickException("Search cannot be empty.")
+
+    target_dir = config.get("dir", CURRENT_WORKING_DIR)
+    caption_dir = config.get("caption_dir", target_dir)
+
+    async def run_quick():
+        async with MovieBoxHttpClient() as session:
+            items = await fetch_search_items(
+                query,
+                subject_type=SubjectType.ALL,
+                year=0,
+                limit=8,
+                client_session=session,
+            )
+            selected = choose_quick_result(items)
+            subject_type = selected.subject_type
+
+            console.print(
+                f"[dim]Detected:[/dim] "
+                f"[bold]{quick_subject_label(subject_type)}[/bold]"
+            )
+            render_selected_item(selected)
+
+            item_details = await ItemDetails(session).get_content_model(
+                selected.subject_id
+            )
+            dub_default = (
+                language_hint_from_title(selected.title)
+                or config.get("dub", QUICK_DEFAULT_DUB)
+            )
+            selected_dub = choose_quick_dub(item_details.dubs, dub_default)
+            target_subject_id = (
+                selected_dub.subject_id if selected_dub else selected.subject_id
+            )
+
+            if subject_type is SubjectType.TV_SERIES:
+                series_info = await SeasonDetails(session).get_content_model(
+                    target_subject_id
+                )
+                season, episode, limit = choose_quick_series_range(
+                    series_info
+                )
+            else:
+                season = episode = limit = 1
+
+            downloadable_details = await DownloadableFilesDetail(
+                session
+            ).get_content_model(
+                target_subject_id,
+                release_date=str(selected.release_date),
+            )
+            quality = choose_quick_quality(
+                downloadable_details,
+                normalize_quality(
+                    config.get("quality", CustomResolutionType.BEST.value)
+                ),
+            )
+            audio_name = selected_dub.lan_name if selected_dub else "Original"
+            action = choose_action()
+            streaming = action == "stream"
+            stream_via = "browser" if streaming else None
+            render_download_summary(
+                selected=selected,
+                audio=audio_name,
+                quality=quality,
+                target_dir=target_dir,
+                season=season,
+                episode=episode,
+                limit=limit,
+                stream=streaming,
+            )
+            prompt = "Stream?" if streaming else "Download?"
+            if not click.confirm(prompt, default=True, show_default=True):
+                console.print("[yellow]Cancelled.[/yellow]")
+                return
+
+            async def selected_item_search_function(
+                *_: Any, **__: Any
+            ) -> ResultsSubjectModel:
+                return selected
+
+            downloader = Downloader(session)
+            if subject_type is SubjectType.TV_SERIES:
+                await downloader.download_tv_series(
+                    selected.title,
+                    year=selected.release_date.year if selected.release_date else 0,
+                    season=season,
+                    episode=episode,
+                    limit=limit,
+                    yes=True,
+                    dir=target_dir,
+                    caption_dir=caption_dir,
+                    quality=quality,
+                    language=(DEFAULT_CAPTION_LANGUAGE,),
+                    download_caption=False,
+                    stream_via=stream_via,
+                    search_function=selected_item_search_function,
+                    dub=audio_name,
+                )
+                return
+
+            await downloader.download_movie(
+                selected.title,
+                year=selected.release_date.year if selected.release_date else 0,
+                yes=True,
+                dir=target_dir,
+                caption_dir=caption_dir,
+                quality=quality,
+                language=(DEFAULT_CAPTION_LANGUAGE,),
+                download_caption=False,
+                caption_only=False,
+                stream_via=stream_via,
+                search_function=selected_item_search_function,
+                dub=audio_name,
+            )
+
+    run(run_quick())
+
+
 @click.command("search")
 @click.argument("query")
 @click.option(
@@ -413,7 +876,12 @@ def search_command(query: str, subject_type_name: str, year: int, limit: int, se
 @click.option("-u", "--dub", default=None, help="Dub language name or code.")
 @click.option("--caption/--no-caption", default=False, help="Download subtitle files.")
 @click.option("--caption-only", is_flag=True, help="Download subtitle files only.")
-@click.option("--stream-via", type=click.Choice(["mpv", "vlc"]), default=None)
+@click.option(
+    "--stream-via",
+    type=click.Choice(["browser", "mpv", "vlc"]),
+    default=None,
+    help="Stream instead of download. 'browser' needs no extra player.",
+)
 @click.option("--dry-run", is_flag=True, help="Preview selected result without downloading.")
 @click.option("-Y", "--yes", is_flag=True, help="Use first result without prompting.")
 def movie_command(
@@ -491,7 +959,12 @@ def movie_command(
 @click.option("-x", "--language", multiple=True, help="Subtitle language.")
 @click.option("-u", "--dub", default=None, help="Dub language name or code.")
 @click.option("--caption/--no-caption", default=False, help="Download subtitle files.")
-@click.option("--stream-via", type=click.Choice(["mpv", "vlc"]), default=None)
+@click.option(
+    "--stream-via",
+    type=click.Choice(["browser", "mpv", "vlc"]),
+    default=None,
+    help="Stream instead of download. 'browser' needs no extra player.",
+)
 @click.option("--dry-run", is_flag=True, help="Preview selected result without downloading.")
 @click.option("-Y", "--yes", is_flag=True, help="Use first result without prompting.")
 def series_command(
@@ -810,6 +1283,7 @@ def config_reset(yes: bool):
 
 
 FRIENDLY_COMMANDS = (
+    quick_command,
     search_command,
     movie_command,
     series_command,

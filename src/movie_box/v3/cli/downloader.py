@@ -322,7 +322,7 @@ class Downloader:
                 # terminate
                 return (None, subtitle_details_items)
 
-        if stream_via and not run_kwargs["test"]:
+        if stream_via and not run_kwargs.get("test"):
             return media_player_name_func_map[stream_via](
                 str(target_media_file.url), subtitle_details_items, subtitles_dir
             )
@@ -370,6 +370,7 @@ class Downloader:
         auto_mode: bool = False,
         format: Literal["group", "struct"] | None = None,
         dub: str = DEFAULT_DUB_LANGUAGE_NAME_OR_CODE,
+        dub_selector: DubSelector | None = None,
         **run_kwargs,
     ) -> dict[
         int,
@@ -516,6 +517,9 @@ class Downloader:
             target_tv_series.subject_id
         )
 
+        if dub_selector and item_details.dubs:
+            dub = dub_selector(item_details.dubs, dub)
+
         target_dub = get_dub_or_raise(item_details, dub)
 
         downloadable_files_detail_inst = DownloadableFilesDetail(
@@ -597,7 +601,7 @@ class Downloader:
                     if caption_only:
                         continue
 
-                if stream_via and not run_kwargs["test"]:
+                if stream_via and not run_kwargs.get("test"):
                     media_player_name_func_map[stream_via](
                         str(video_file.url), subtitle_details_items, subtitles_dir
                     )

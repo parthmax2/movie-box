@@ -364,7 +364,16 @@ def stream_video_via_vlc(
         raise Exception(f"Error launching VLC: {e}") from e
 
 
+def stream_video_via_browser(*args, **kwargs):
+    # Imported lazily so a desktop-player stream never pays for httpx/server
+    # setup, and to keep this module import-light.
+    from movie_box.streaming import stream_video_via_browser as _stream
+
+    return _stream(*args, **kwargs)
+
+
 media_player_name_func_map = {
+    "browser": stream_video_via_browser,
     "mpv": stream_video_via_mpv,
     "vlc": stream_video_via_vlc,
 }

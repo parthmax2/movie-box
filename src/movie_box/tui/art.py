@@ -62,11 +62,12 @@ def command_table() -> Table:
     table = Table.grid(padding=(0, 3))
     table.add_column(style=f"bold {THEME.text}", no_wrap=True)
     table.add_column(style=THEME.muted)
+    table.add_row("movie-box", "guided movie or series download")
     table.add_row("movie-box search", "find movies and series")
     table.add_row("movie-box movie", "select and download a movie")
     table.add_row("movie-box series", "select and download episodes")
     table.add_row("movie-box config", "save quality, language, and folders")
-    table.add_row("movie-box ui", "open the interactive cyberpunk shell")
+    table.add_row("movie-box shell", "open the slash-command shell")
     table.add_row("movie-box doctor", "check your local setup")
     return table
 

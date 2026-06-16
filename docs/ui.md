@@ -1,21 +1,67 @@
-# Interactive Shell UI
+# Interactive CLI UI
 
-movie-box ships a cyberpunk interactive shell that lets you search, browse, and
-download content without memorizing long command-line flags.
+movie-box ships a guided download flow and a cyberpunk interactive shell that
+let you search, browse, and download content without memorizing long
+command-line flags.
 
 ---
 
-## Launching the shell
+## Guided default flow
 
-Typing `movie-box` or `moviebox` with no subcommand goes straight into the
-shell. Both commands are identical.
+Typing `movie-box` or `moviebox` with no subcommand opens the guided download
+flow. It asks for the title, detects movie vs series when it can, then asks only
+for the details needed to start downloading.
 
 ```sh
 movie-box
 moviebox
 ```
 
-You can also use the explicit subcommand — it behaves the same way:
+You can also pass the search query directly:
+
+```sh
+movie-box "Avatar"
+moviebox titans
+```
+
+Typical movie prompts:
+
+```text
+Search: Avatar
+Detected: Movie
+Audio language [1]:
+Quality [best]:
+Download summary
+Download? [Y/n]:
+```
+
+For a series it also asks for season, episode, and episode count before quality.
+
+```text
+Search: Merlin
+Detected: Series
+Audio language [1]:
+Available seasons
+Season [1]:
+Episode [1]:
+Episodes [1]:
+Quality [best]:
+Download summary
+Download? [Y/n]:
+```
+
+---
+
+## Launching the shell
+
+The older slash-command shell is still available explicitly.
+
+```sh
+movie-box shell
+moviebox shell
+```
+
+You can also use the original subcommand:
 
 ```sh
 movie-box ui
@@ -52,48 +98,40 @@ Type `/help` at any time to print the command deck.
 | `/series` | `/series <title>` | Search TV series and preview the top match |
 | `/select` | `/select <number>` | Preview a result from the last `/search` by its table number |
 | `/download` | `/download <number>` | Download the chosen movie result from the last `/search`; prompts for audio dub and quality |
-| `/config` | `/config` | Show your saved CLI defaults (quality, directory, language, etc.) |
-| `/doctor` | `/doctor` | Reminder to run `movie-box doctor` for a full environment check |
+| `/config` | `/config` | Show your saved CLI defaults |
+| `/doctor` | `/doctor` | Reminder to run `movie-box doctor` |
 | `/clear` | `/clear` | Clear the terminal and redisplay the compact header |
 | `/exit` | `/exit` | Close the shell |
 
 ### Shorthand
 
-You can omit the leading `/` — the shell treats bare words as search queries:
+You can omit the leading `/`; the shell treats bare words as search queries:
 
-```
-Avatar                 → same as /search Avatar
-/search Inception      → explicit form
+```text
+Avatar                 -> same as /search Avatar
+/search Inception      -> explicit form
 ```
 
 You can also type a result number directly after a `/search` to preview it:
 
-```
+```text
 /search Avatar
-2                      → same as /select 2
+2                      -> same as /select 2
 ```
 
 ---
 
-## Autocomplete
+## Typical shell workflow
 
-The shell uses [PromptToolkit](https://python-prompt-toolkit.readthedocs.io/)
-when it is installed (included in `movie-box[cli]`). Start typing `/` and press
-`Tab` to cycle through available commands.
-
----
-
-## Typical workflow
-
-```
-movie-box                   # enter the shell
+```text
+movie-box shell             # enter the shell
 
 /search Inception           # search for a title
 3                           # preview result #3
 /download 3                 # choose dub, choose quality, then download
 
 /series Breaking Bad        # preview a TV series match
-                            # use movie-box series on the CLI for episode downloads
+                            # use movie-box series for episode downloads
 
 /config                     # check saved defaults
 /exit                       # leave the shell
@@ -114,11 +152,8 @@ movie-box config show
 movie-box config reset
 ```
 
-The shell reads these defaults automatically when you run `/download`. During
-download it shows numbered choices for audio dub and video quality. The saved
-`dub` and `quality` values become the default selections when they are available;
-otherwise the quality prompt defaults to the highest available file. Caption
-language defaults are used by the one-shot `movie-box movie --caption` command.
+The guided flow and shell read these defaults automatically. During download the
+saved `dub` and `quality` values become preferred selections when available.
 
 Config is stored under your system's user config directory. Override the
 location with environment variables:
